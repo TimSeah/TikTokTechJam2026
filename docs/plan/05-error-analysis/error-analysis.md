@@ -9,19 +9,22 @@ Reference: [../../problem_statement.md §5.5](../../problem_statement.md#55-expe
 
 1. Run `predict.py` (or reuse Phase 3 eval outputs) over the CIFAKE test split and the
    validation-only subset; identify misclassified examples.
-2. Select 4–8 representative false positives and false negatives, prioritizing ones tied to the
-   worst-performing transform/severity found in Phase 3.
+2. Select at least 2 representative false positives and 2 false negatives, prioritizing examples
+   tied to the largest clean-to-transformed AUC drop found in Phase 3.
 3. For each, save the image (or a thumbnail) into `outputs/error_examples/` and write one or two
    sentences hypothesizing why it was misclassified.
 4. Summarize overall trade-offs observed (e.g. "aggressive JPEG compression pushes fakes below the
    decision threshold; heavily color-jittered real photos get flagged as fake").
+5. Interpret the Phase 3 ablation: state whether frequency fusion and augmentation improved clean
+   AUC, robust AUC, both, or neither. Do not claim a contribution that the table does not support.
 
 ## Definition of done
 
-- [ ] `outputs/error_analysis.md` exists with at least 4 false-positive and 4 false-negative
-      examples, each with an image reference and a one-line hypothesis.
+- [ ] `outputs/error_analysis.md` exists with at least 2 false-positive and 2 false-negative
+   examples, each with an image reference and a one-line hypothesis.
 - [ ] A short trade-offs paragraph ties the findings back to the robustness table from Phase 3.
+- [ ] A short ablation paragraph distinguishes measured findings from hypotheses.
 
 ## Time budget
 
-35 minutes.
+45 minutes including ablation interpretation.

@@ -42,12 +42,29 @@ per-severity breakdown.
 
 ## Setup and installation
 
-```bash
-git clone <this-repo-url>
+### Windows 11 with AMD Radeon RX 7900 XTX
+
+Requires Python 3.12 and AMD Software: Adrenalin Edition 26.2.2 or newer. The environment below has
+been validated locally with Adrenalin 26.6.4, PyTorch 2.9.1, and ROCm 7.2.1.
+
+```powershell
+git clone https://github.com/TimSeah/TikTokTechJam2026.git
 cd TikTokTechJam2026
-python -m venv venv
-venv\Scripts\activate        # Windows
+uv python install 3.12
+uv venv --python 3.12 .venv-amd
+.\.venv-amd\Scripts\Activate.ps1
+$env:ROCM_SDK_TARGET_FAMILY = "custom"
+uv pip install -r requirements-amd.txt
+python scripts/check_environment.py --require-gpu --benchmark-clip
+```
+
+### Colab, CUDA, or CPU
+
+Use a Python 3.12 environment. Colab already supplies a compatible CUDA build of PyTorch.
+
+```bash
 pip install -r requirements.txt
+python scripts/check_environment.py --benchmark-clip --batch-size 1 --device cpu
 ```
 
 Datasets (CIFAKE + the validation-only WildFake subset) are not committed to the repo; see
@@ -67,7 +84,7 @@ python src/detector/train_probe.py
 python src/detector/evaluate.py
 
 # 4. Run inference on any folder of images
-python src/predict.py <image_dir> --out preds.json
+python src/predict.py --input_dir <image_dir> --out preds.json
 ```
 
 `predict.py` writes a JSON list of `{"image_path": ..., "pred": ...}` objects, where `pred` is a
@@ -75,7 +92,7 @@ continuous AI-generated confidence score (not a hard label).
 
 ## Repository layout
 
-```
+```text
 LICENSE
 data/                        # gitignored, CIFAKE + validation-only downloads
 src/
@@ -87,7 +104,7 @@ src/
     evaluate.py
   predict.py                  # image dir -> JSON of {image_path, pred}
 outputs/
-  probe.joblib                # committed trained classifier head
+  detector.joblib             # committed CPU-loadable inference bundle
   model_card.md
   robustness_table.csv
   error_analysis.md

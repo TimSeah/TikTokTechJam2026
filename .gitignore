@@ -1,0 +1,26 @@
+# Python environments and caches
+.venv*/
+venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.serena/
+
+# Local secrets and editor state
+.env
+.env.*
+!.env.example
+.vscode/
+.ipynb_checkpoints/
+
+# Datasets and regenerated feature caches
+data/*
+!data/README.md
+cache/
+*.npy
+*.npz
+
+# Regenerated inference output; model/report artifacts remain tracked
+outputs/preds.json
