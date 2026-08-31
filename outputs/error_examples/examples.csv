@@ -1,0 +1,5 @@
+error_type,rank,image,source_path,image_id,true_label,fake_score,condition,threshold
+false_positive,1,false_positive_1.jpg,test/REAL/0155 (9).jpg,19372d71d0b1d25e,0,0.998206377029419,blur_sigma2.0,0.5
+false_positive,2,false_positive_2.jpg,test/REAL/0644.jpg,e4e45fb5b43489a6,0,0.9933244585990906,blur_sigma2.0,0.5
+false_negative,1,false_negative_1.jpg,test/FAKE/546 (9).jpg,43a29d98a605a871,1,0.0039539760909974575,blur_sigma2.0,0.5
+false_negative,2,false_negative_2.jpg,test/FAKE/965 (10).jpg,68169dfdaa4a2dae,1,0.004991909489035606,blur_sigma2.0,0.5

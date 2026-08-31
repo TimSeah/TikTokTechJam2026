@@ -1,0 +1,21 @@
+{
+  "evaluation_condition": "clean",
+  "threshold": 0.5,
+  "models": {
+    "semantic_clean": {
+      "auc": 0.9887549649999999,
+      "accuracy": 0.94755,
+      "f1": 0.9474211818956443
+    },
+    "hybrid_clean": {
+      "auc": 0.9917602700000001,
+      "accuracy": 0.9565,
+      "f1": 0.9564651721377102
+    },
+    "hybrid_augmented": {
+      "auc": 0.9884091449999999,
+      "accuracy": 0.94675,
+      "f1": 0.9471122808759994
+    }
+  }
+}
