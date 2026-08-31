@@ -2,7 +2,7 @@
 
 **An image detector and a game where you compete against it.**
 
-[Play the live hybrid demo](https://real-vs-ai.pages.dev) ·
+[Play the live demo](https://real-vs-ai.pages.dev) ·
 [Read the report (PDF)](docs/technical_report.pdf) ·
 [Inspect the model card](outputs/model_card.md) ·
 [Reproduce the results](#reproduce)
@@ -37,10 +37,9 @@ I checked the live flow with Chrome DevTools on 1 September 2026 at desktop and 
 sizes. Status, round creation, image delivery, and guess submission all returned HTTP 200, with no
 console warnings or errors.
 
-The hosted Modal backend still reports `ViT-B-32-quickgelu / hybrid_augmented`, so the screenshots
-above show the older hybrid deployment. The repository and local demo use the newer
-`semantic_native_mixed` artifact. The Modal service needs to be redeployed before the hosted game
-can be used as evidence for the new model.
+The deployed Modal backend runs `ViT-B-32-quickgelu / semantic_native_mixed`, matching the promoted
+artifact in this repository. The hosted game can therefore be used as live evidence for the current
+model.
 
 ## Results
 

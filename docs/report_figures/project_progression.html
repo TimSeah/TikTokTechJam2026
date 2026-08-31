@@ -1,0 +1,176 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Model development progression</title>
+    <style>
+        :root {
+            --ink: #16202a;
+            --muted: #64717d;
+            --arrow: #84929c;
+            --blue-bg: #e8f1f6;
+            --blue-edge: #164b73;
+            --orange-bg: #f8eee3;
+            --orange-edge: #d27728;
+            --green-bg: #e7f3ef;
+            --green-edge: #00876c;
+            --red-bg: #f7e6e6;
+            --red-edge: #b94343;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        html,
+        body {
+            margin: 0;
+            width: 1600px;
+            height: 360px;
+            background: #fff;
+        }
+
+        body {
+            display: grid;
+            place-items: center;
+            font-family: "Segoe UI", Arial, sans-serif;
+            color: var(--ink);
+        }
+
+        .progression {
+            width: 1510px;
+            display: grid;
+            grid-template-columns: repeat(7, minmax(0, 1fr));
+            gap: 14px;
+            align-items: stretch;
+        }
+
+        .stage {
+            position: relative;
+            height: 210px;
+            border: 3px solid var(--edge);
+            border-radius: 9px;
+            background: var(--fill);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 22px 12px 18px;
+            text-align: center;
+        }
+
+        .stage:not(:last-child)::before {
+            content: "";
+            position: absolute;
+            z-index: 2;
+            top: calc(50% - 1px);
+            right: -14px;
+            width: 14px;
+            height: 3px;
+            background: var(--arrow);
+        }
+
+        .stage:not(:last-child)::after {
+            content: "";
+            position: absolute;
+            z-index: 2;
+            top: calc(50% - 5px);
+            right: -14px;
+            width: 0;
+            height: 0;
+            border-top: 5px solid transparent;
+            border-bottom: 5px solid transparent;
+            border-left: 7px solid var(--arrow);
+        }
+
+        .stage h2 {
+            margin: 0 0 25px;
+            max-width: 100%;
+            font-size: 20px;
+            line-height: 1.05;
+            font-weight: 700;
+        }
+
+        .stage p {
+            margin: 0;
+            color: var(--muted);
+            font-size: 16px;
+            line-height: 1.18;
+            white-space: pre-line;
+        }
+
+        .semantic {
+            --fill: var(--blue-bg);
+            --edge: var(--blue-edge);
+        }
+
+        .frequency {
+            --fill: var(--orange-bg);
+            --edge: var(--orange-edge);
+        }
+
+        .augmentation {
+            --fill: var(--green-bg);
+            --edge: var(--green-edge);
+        }
+
+        .native {
+            --fill: var(--red-bg);
+            --edge: var(--red-edge);
+        }
+
+        .diagnosis {
+            --fill: var(--orange-bg);
+            --edge: var(--orange-edge);
+        }
+
+        .promotion {
+            --fill: var(--green-bg);
+            --edge: #62a744;
+        }
+    </style>
+</head>
+
+<body>
+    <main class="progression" aria-label="Model development progression">
+        <section class="stage semantic">
+            <h2>Semantic<br>baseline</h2>
+            <p>clean .989
+                robust .918</p>
+        </section>
+        <section class="stage frequency">
+            <h2>Add FFT</h2>
+            <p>clean .992
+                robust .911</p>
+        </section>
+        <section class="stage augmentation">
+            <h2>Add<br>augmentation</h2>
+            <p>robust .956
+                composite .972</p>
+        </section>
+        <section class="stage native">
+            <h2>Native test</h2>
+            <p>AUC
+                about .50</p>
+        </section>
+        <section class="stage diagnosis">
+            <h2>Branch<br>diagnosis</h2>
+            <p>frequency |z|
+                about 500</p>
+        </section>
+        <section class="stage semantic">
+            <h2>Remove FFT</h2>
+            <p>semantic
+                model</p>
+        </section>
+        <section class="stage promotion">
+            <h2>Promote</h2>
+            <p>SID .992
+                WildFake .903 / .913</p>
+        </section>
+    </main>
+</body>
+
+</html>

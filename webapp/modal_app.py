@@ -48,6 +48,12 @@ image = (
             "frontend",
         ],
     )
+    .add_local_dir(
+        LOCAL_WEBAPP_ROOT.parent / "src",
+        "/root/src",
+        copy=True,
+        ignore=["**/__pycache__"],
+    )
     .workdir("/root")
 )
 

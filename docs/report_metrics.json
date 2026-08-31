@@ -1,0 +1,101 @@
+{
+  "schema_version": 1,
+  "report_date": "2026-09-01",
+  "sources": {
+    "submitted_clean": "outputs/clean_metrics.json",
+    "submitted_blind": "outputs/cross_domain_summary.json",
+    "submitted_blind_diagnostics": "data/blind-test/ablation_results.json",
+    "promoted_model": "outputs/native_metrics.json",
+    "promoted_robustness": "outputs/robustness_table.csv",
+    "promoted_timing": "outputs/native_training_timing.json",
+    "frequency_baseline_recipe": "StandardScaler fit on data/features/train-clean and data/features/train-augmented; evaluated on data/features/test-clean"
+  },
+  "submitted_hybrid": {
+    "artifact_sha256": "e9bc59e42469c9f7001d7f23f6cbfbdac599e6968148329ef956faefc3427b5e",
+    "feature_dimensions": 544,
+    "learned_values": 545,
+    "backbone_parameters": 151277313,
+    "ablation": [
+      {
+        "model": "Semantic",
+        "training": "clean",
+        "clean_auc": 0.988755,
+        "robust_auc": 0.917770,
+        "composite": 0.953263
+      },
+      {
+        "model": "Semantic + FFT",
+        "training": "clean",
+        "clean_auc": 0.991760,
+        "robust_auc": 0.910941,
+        "composite": 0.951351
+      },
+      {
+        "model": "Semantic + FFT",
+        "training": "clean + augmented",
+        "clean_auc": 0.988409,
+        "robust_auc": 0.956211,
+        "composite": 0.972310
+      }
+    ],
+    "conditions": [
+      {"condition": "Clean", "family": "clean", "auc": 0.988409},
+      {"condition": "JPEG q90", "family": "jpeg", "auc": 0.988318},
+      {"condition": "JPEG q70", "family": "jpeg", "auc": 0.988245},
+      {"condition": "JPEG q50", "family": "jpeg", "auc": 0.978803},
+      {"condition": "JPEG q30", "family": "jpeg", "auc": 0.963325},
+      {"condition": "Blur sigma 0.5", "family": "blur", "auc": 0.984007},
+      {"condition": "Blur sigma 1.0", "family": "blur", "auc": 0.953878},
+      {"condition": "Blur sigma 2.0", "family": "blur", "auc": 0.886651},
+      {"condition": "Resize 0.5x", "family": "resize", "auc": 0.948569},
+      {"condition": "Resize 0.25x", "family": "resize", "auc": 0.882709},
+      {"condition": "Noise sigma 0.02", "family": "noise", "auc": 0.979605},
+      {"condition": "Noise sigma 0.05", "family": "noise", "auc": 0.968462},
+      {"condition": "Noise sigma 0.10", "family": "noise", "auc": 0.907460},
+      {"condition": "Color jitter 20%", "family": "jitter", "auc": 0.983155},
+      {"condition": "Center crop 80%", "family": "crop", "auc": 0.973767}
+    ]
+  },
+  "blind_ablation": {
+    "datasets": ["SID-Set", "COCO / DALL-E", "LAION / DALL-E"],
+    "models": [
+      {"model": "Semantic", "auc": [0.886975, 0.767975, 0.740600]},
+      {"model": "Hybrid", "auc": [0.532475, 0.427500, 0.523488]},
+      {"model": "Hybrid + augmentation", "auc": [0.497500, 0.502500, 0.500000]}
+    ]
+  },
+  "frequency_diagnosis": {
+    "training_rows": 200000,
+    "training_max_abs_standardized": 15.341452,
+    "training_p99_9_abs_standardized": 5.475487,
+    "cifake_test_max_abs_standardized": 12.152408,
+    "cifake_test_p99_9_abs_standardized": 5.064461,
+    "blind_max_abs_standardized": {
+      "SID-Set": 507.990021,
+      "COCO / DALL-E": 498.137604,
+      "LAION / DALL-E": 505.870605
+    },
+    "sid_logit_range": [7.962010, 121.439034]
+  },
+  "promoted_semantic": {
+    "artifact_sha256": "0c1cf7d6dc1c7ec3b4e3885d5a76d0b1ed7b2908fce7bdb5be4991b9208449cf",
+    "feature_dimensions": 512,
+    "learned_values": 513,
+    "training_rows": 48000,
+    "training_domains": ["CIFAKE", "SID-Set", "WildFake"],
+    "views_per_image": 2,
+    "threshold": 0.7819586396217346,
+    "training_seconds": 547.063,
+    "cifake": {
+      "clean_auc": 0.95781988,
+      "robust_auc": 0.8966357017857144,
+      "composite": 0.9272277908928572
+    },
+    "promotion_gates": [
+      {"gate": "SID calibration", "auc": 0.993972, "passed": true},
+      {"gate": "SID validation", "auc": 0.991900, "passed": true},
+      {"gate": "COCO / DALL-E", "auc": 0.902925, "passed": true},
+      {"gate": "LAION / DALL-E", "auc": 0.912700, "passed": true}
+    ]
+  }
+}
