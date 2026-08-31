@@ -34,7 +34,7 @@
   citecolor=Teal,
   urlcolor=Navy,
   pdfauthor={Timothy Seah},
-  pdftitle={Real or Fake? Transformation Robustness Does Not Guarantee Cross-Generator Generalization},
+  pdftitle={Real or Fake? Transformation Robustness Does Not Guarantee Cross-Domain Transfer},
   pdfsubject={TikTok TechJam 2026 Track 5 Technical Report}
 }
 
@@ -82,7 +82,7 @@
 \twocolumn[
 \begin{center}
   {\LARGE\bfseries\color{Ink} Real or Fake? Transformation Robustness Does Not\\
-  Guarantee Cross-Generator Generalization\par}
+  Guarantee Cross-Domain Transfer\par}
   \vspace{0.15in}
   {\large Timothy Seah\par}
   \vspace{2pt}
@@ -102,21 +102,21 @@ showed that augmentation, rather than the Fourier branch by itself, provided mos
 gain.
 
 The blind test changed the direction of the work. On balanced SID-Set, COCO/DALL-E, and LAION/DALL-E
-samples, the selected hybrid produced AUCs of 0.4975, 0.5025, and 0.5000 and called every image fake.
-Its semantic-only component retained AUCs of 0.8870, 0.7680, and 0.7406. The largest absolute
-standardized frequency feature was 12.15 on clean CIFAKE but about 498--508 on the blind sets. Those
-values drove logits as high as 121.44 and saturated the sigmoid output.
+samples, the selected hybrid produced probability AUCs of 0.4975, 0.5025, and 0.5000 and called every
+image fake. A numerical audit found raw-margin AUCs of 0.7598, 0.5377, and 0.7140: the frequency
+branch drove logits as high as 121.44, so 399, 399, and 400 of 400 probabilities rounded to exactly
+one and concealed residual ranking on two sets.
 
 I removed the frequency branch and retrained a semantic-only probe on balanced CIFAKE, SID-Set, and
-WildFake data. The resulting model uses 48,000 training rows and passes the recorded gates with
-0.991900 SID validation AUC, 0.902925 COCO/DALL-E AUC, and 0.912700 LAION/DALL-E AUC. Its CIFAKE clean
-and robust AUCs fall to 0.957820 and 0.896636. The main result is straightforward: robustness to
-post-processing and transfer across generators are different objectives. A promotion process needs
-to test both, along with score saturation and branch-level feature ranges.
+WildFake data. Its 24,000 source images produce 48,000 clean-plus-augmented fitting rows. The model
+passes the recorded gates with 0.991900 SID validation AUC, 0.902925 COCO/DALL-E AUC, and 0.912700
+LAION/DALL-E AUC, while CIFAKE clean and robust AUCs fall to 0.957820 and 0.896636. The evidence shows
+that robustness to specified post-processing does not establish transfer under a compound change in
+generator, real-image source, content, resolution, and compression history.
 
 \vspace{5pt}
-\noindent\textbf{Keywords:} AI-generated image detection; transformation robustness; domain
-generalization; OpenCLIP; frequency analysis; synthetic media forensics.
+\noindent\textbf{Keywords:} AI-generated image detection; transformation robustness; domain shift;
+OpenCLIP; frequency analysis; synthetic media forensics.
 \end{minipage}
 \vspace{0.12in}
 ]
@@ -141,7 +141,7 @@ that combination as a starting hypothesis, not as a conclusion.
 I organised the work around four questions. \textbf{RQ1} asks whether deterministic augmentation preserves
 ranking across the 14 required transformation conditions. \textbf{RQ2} asks what the semantic branch,
 frequency branch, and augmentation each contribute. \textbf{RQ3} asks whether the model selected on
-CIFAKE transfers to native-resolution images from unseen sources and generators. \textbf{RQ4} asks
+CIFAKE transfers under compound source-and-generator shift. \textbf{RQ4} asks
 whether the failure diagnosis can produce a safer successor and promotion process.
 
 The order of the experiments matters. I first built and selected the hybrid on CIFAKE, then froze
@@ -149,8 +149,9 @@ that artifact before sampling the blind sets. The blind failure led to a branch-
 and a semantic-only, multi-domain training run. Reporting only the first score would hide the main
 lesson; reporting only the final model would hide how I arrived at it.
 
-\keyfinding{The 0.972310 CIFAKE composite and 0.5000 blind AUC are both correct. They answer different
-questions about the same frozen hybrid model.}
+\keyfinding{The 0.972310 CIFAKE composite and collapsed blind probabilities answer different
+questions about the same frozen hybrid. The raw-margin audit further shows why numerical saturation
+must be separated from ranking failure.}
 
 \section{Related Work}
 
@@ -228,7 +229,8 @@ features, followed by L2-regularized logistic regression~\cite{pedregosa2011skle
  p(x)=\sigma\!\left(w^\top\operatorname{std}(z(x))+b\right).
 \end{equation}
 The interface calls this value \code{P(FAKE)}, but it is not calibrated to deployment prevalence. It
-is a ranking score, not proof of a literal real-world probability.
+is a confidence score, not proof of a literal real-world probability. For the saturation audit I also
+evaluate the pre-sigmoid margin, which preserves ordering when finite-precision probabilities tie.
 
 \subsection{Promoted Semantic Model}
 
@@ -240,7 +242,8 @@ deterministically transformed view, producing 48,000 fitting rows.
 For WildFake fitting, I used nine allowed groups: ADM, DDPM, GALIP, GigaGAN, VQGAN, VQVAE, AFHQ,
 CelebA-HQ, and LSUN-Church. COCO val2017, DALL-E Advanced, and all frozen evaluation identifiers are
 excluded. The threshold, 0.7819586396, was selected on a disjoint 500-real/500-generated SID
-calibration split. The final head has 512 coefficients and one intercept.
+calibration split by maximizing Youden's $J=\mathrm{TPR}-\mathrm{FPR}$, with ties resolved toward 0.5.
+The final head has 512 coefficients and one intercept.
 
 \section{Data and Evaluation Protocol}
 
@@ -249,7 +252,8 @@ calibration split. The final head has 512 coefficients and one intercept.
 CIFAKE contains $32\times32$ JPEG images derived from CIFAR-10 real images and generated
 counterparts~\cite{bird2024cifake}. The published split is preserved: 50,000 real and 50,000 generated
 training images, followed by 10,000 real and 10,000 generated test images. Test labels are not used for
-fitting. All 20,000 test images are scored under every condition.
+fitting. However, I compared model variants on this matrix, so it is development/model-selection
+evidence rather than a final untouched test. All 20,000 images are scored under every condition.
 
 I apply transformations individually rather than stacking them. For augmented fitting, family and
 severity are selected deterministically from the SHA-256 of the global seed, image identifier, and
@@ -289,9 +293,15 @@ contains 200 real and 200 generated images. The manifests preserve identifiers, 
 dimensions, byte sizes, and hashes.
 
 SID validation uses label 0 and label 1 images from SID-Set revision \code{dc03ead...}~\cite{sidset}.
-WildFake default uses COCO val2017 and DALL-E Advanced; a matched configuration uses LAION-5B and
-DALL-E Advanced~\cite{wildfake}. Sampling seeds are 2028, 2026, and 2027. The frozen hybrid SHA-256 is
+WildFake default uses COCO val2017 and DALL-E Advanced; a dimension-matched configuration uses
+LAION-5B and DALL-E Advanced~\cite{wildfake}. These sets jointly change generator, real-image source,
+content, resolution, and compression history; they do not isolate generator shift. Sampling seeds are
+2028, 2026, and 2027. The frozen hybrid SHA-256 is
 \code{e9bc59e4...c3427b5e}. Five thousand stratified bootstrap replicates estimate 95\% AUC intervals.
+
+I also audit raw decision margins, exact probability saturation, calibration, simple metadata-only
+baselines, and SHA-256 overlap. Twenty deterministic half-samples test sensitivity to sample
+composition; they are not independent dataset draws.
 
 \subsection{Promotion Gates}
 
@@ -320,7 +330,7 @@ Quarter-scale resizing and blur at $\sigma=2.0$ were the first conditions below 
   \centering
   \includegraphics[width=0.98\textwidth]{robustness_conditions.png}
   \caption{ROC AUC for the original hybrid under individual transformations. Every bar uses the same 20,000 held-out CIFAKE
-  images. The x-axis begins at 0.84; labels report absolute AUC.}
+  images. The x-axis reports change from clean performance; labels report absolute AUC.}
   \label{fig:conditions}
 \end{figure*}
 
@@ -383,27 +393,28 @@ Promoted semantic & .957820 & .896636 & .927228 \\
 
 For the promoted model, the hardest CIFAKE conditions are blur $\sigma=2.0$ at 0.785540 AUC, resize
 0.25 at 0.774426, and noise $\sigma=0.10$ at 0.797451. This trade-off is important and should not be
-hidden behind the stronger cross-generator numbers.
+hidden behind the stronger native-domain numbers.
 
 \section{Where the Hybrid Failed}
 
-\subsection{Blind Transfer Reversed the Ranking}
+\subsection{Blind Probabilities Collapsed}
 
-The blind result is the turning point of the project because it overturns the benchmark ranking. The
-semantic baseline retains ranking information on all three samples. Both hybrid variants are near
-chance, and the selected augmented hybrid calls every image fake at threshold 0.5.
+The blind result is the turning point because it overturns the benchmark selection. The semantic
+baseline retains ranking information on all three samples. Both hybrids emit severely saturated
+probabilities, and the selected augmented hybrid calls every image fake at threshold 0.5.
 
 \begin{figure*}[!t]
   \centering
   \includegraphics[width=0.96\textwidth]{blind_transfer.png}
-  \caption{ROC AUC on three frozen, balanced native-resolution samples for the three model variants. Each
-  cell uses the same 200-real/200-generated sample.}
+  \caption{Probability ROC AUC on three frozen, balanced native-resolution samples for the three model
+  variants. Each cell uses the same 200-real/200-generated sample; raw-margin results follow in
+  Table~\ref{tab:margin}.}
   \label{fig:blind}
 \end{figure*}
 
 \begin{table*}[t]
 \centering
-\caption{Blind ROC AUC by frozen model variant. Each cell uses the same 200-real/200-generated sample.}
+\caption{Blind probability ROC AUC by frozen model variant.}
 \label{tab:blind}
 \small
 \begin{tabular}{@{}lccc@{}}
@@ -418,8 +429,25 @@ Hybrid + augmentation & 0.497500 & 0.502500 & 0.500000 \\
 \end{table*}
 
 The default WildFake sample has an obvious image-size association, but the failure remains in the
-LAION-matched configuration, where size-only AUC is 0.5. Resolution mismatch alone therefore does not
+LAION dimension-matched configuration, where size-only AUC is 0.5. Resolution mismatch alone therefore does not
 explain the collapse.
+
+\begin{table*}[t]
+\centering
+\caption{Selected hybrid probability and raw-margin AUC. Intervals are 5,000-replicate stratified
+bootstrap 95\% intervals. ``Exact 1'' counts emitted probabilities equal to 1.0.}
+\label{tab:margin}
+\small
+\begin{tabular}{@{}lccc@{}}
+\toprule
+Blind set & Probability AUC [95\% CI] & Margin AUC [95\% CI] & Exact 1 \\
+\midrule
+SID-Set & .4975 [.4925, .5000] & .7598 [.7114, .8034] & 399/400 \\
+COCO / DALL-E & .5025 [.5000, .5075] & .5377 [.4797, .5942] & 399/400 \\
+LAION / DALL-E & .5000 [.5000, .5000] & .7140 [.6629, .7630] & 400/400 \\
+\bottomrule
+\end{tabular}
+\end{table*}
 
 \subsection{Frequency Extrapolation}
 
@@ -440,10 +468,19 @@ already close to one.
   \label{fig:frequency}
 \end{figure*}
 
-These values explain why the threshold metrics collapse and why changing the threshold after the fact
-would not restore ranking. The semantic branch is not well calibrated by itself: its median real score
-on SID is still 0.986973. It does retain order information, but the frequency branch erases that order
-by dominating the logit outside the fitting distribution.
+These values explain why threshold metrics and probability AUC collapse. Changing a threshold on the
+rounded probabilities cannot separate hundreds of ties. The raw margins reveal a more precise result:
+ranking survives on SID and LAION/DALL-E, but is weak and statistically compatible with chance on
+COCO/DALL-E. The defect is therefore an unusable public score plus unstable transfer, not uniform
+destruction of ranking. Blind maxima are about $42\times$ the clean-CIFAKE maximum and about
+$93\times$ the training 99.9th percentile.
+
+The audit also exposes dataset shortcuts. Five-fold metadata-only probes using width, height, byte
+size, and aspect ratio reach mean AUCs of 0.971 on SID, 1.000 on COCO/DALL-E, and 0.643 on
+LAION/DALL-E. This does not prove that the image model uses those fields, but it shows that labels and
+source pipelines are confounded. Exact SHA-256 screening finds no fitting/evaluation overlap; the
+LAION/DALL-E manifest contains five repeated files. A difference-hash screen flags a few candidates,
+including one cross-label match, so it is treated as a warning rather than proof of duplication.
 
 \section{Remediation and Promotion}
 
@@ -452,7 +489,7 @@ recorded gate.
 
 \begin{table}[H]
 \centering
-\caption{Promoted semantic-only gates. PFR uses threshold 0.7819586396.}
+\caption{Promoted semantic-only gates. PFR is predicted fake rate at threshold 0.7819586396.}
 \label{tab:gates}
 \small
 \begin{tabularx}{\columnwidth}{@{}Xccc@{}}
@@ -467,9 +504,34 @@ LAION / DALL-E & 0.912700 & 0.4050 & Pass \\
 \end{tabularx}
 \end{table}
 
-The successor removes the observed saturation and improves held-out ranking. That does not prove
+The successor removes the observed saturation and improves held-out ranking. On SID its confusion
+counts are TN/FP/FN/TP $=189/11/8/192$; on COCO/DALL-E they are $162/38/27/173$; and on
+LAION/DALL-E they are $183/17/55/145$. Corresponding 95\% AUC intervals are [.9856, .9967],
+[.8717, .9300], and [.8822, .9400]. Balanced-sample Brier scores are .049, .152, and .124, so the
+confidence values still should not be interpreted as deployment probabilities. This does not prove
 universal generalisation. Because these datasets influenced promotion, the next credible test must use
 generators and sources that were not used for fitting, calibration, or model selection.
+
+\begin{table}[t]
+\centering
+\caption{Promoted model under native-resolution transformations. The individual column is mean
+(minimum) AUC across 14 conditions.}
+\label{tab:native-stress}
+\small
+\begin{tabular}{@{}lccc@{}}
+\toprule
+Set & Clean & Individual & Chains \\
+\midrule
+SID & .992 & .980 (.946) & .975 \\
+COCO / DALL-E & .903 & .864 (.735) & .771 \\
+LAION / DALL-E & .913 & .907 (.862) & .914 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+I additionally applied all 14 individual transforms to each native sample. Three heuristic
+multi-operation re-upload chains combine resize, recompression, colour change, sharpening, and either
+crop or noise. They are stress tests, not measurements of a proprietary TikTok processing pipeline.
 
 \begin{figure*}[!t]
   \centering
@@ -489,13 +551,14 @@ and the wrong model for broad transfer.
 \section{Limitations and Responsible Use}
 
 CIFAKE is low-resolution and generator-narrow; its transformed test set still shares the same
-underlying dataset. The original blind samples and current gates contain only 400 images each. I used
+underlying dataset and was used for model comparison. The original blind samples and current gates
+contain only 400 images each. I used
 the native-resolution gates to select the promoted model, so they are no longer an untouched final
 test. WildFake fitting covers nine groups, but many generators, editing systems, styles, and capture
 pipelines remain unseen.
 
-I evaluated transformations individually, while platform pipelines may stack resizing,
-recompression, colour adjustment, and sharpening. Scores are not calibrated to deployment prevalence.
+The native chain tests cover only three hand-specified sequences. Scores are not calibrated to
+deployment prevalence.
 Demographic bias, adversarial attacks, partial edits, mixed real/generated images, and fairness were
 not evaluated. OpenCLIP may inherit biases from pretraining.
 
@@ -531,9 +594,10 @@ The original hybrid solved the problem I selected it to solve. Deterministic aug
 mean transformed CIFAKE AUC to 0.956211 and composite to 0.972310. The frequency branch alone did not
 produce that gain.
 
-Blind testing then showed that the selected model was not a general detector. It ranked three
-native-resolution samples at chance and saturated every output as fake. A measured forty-fold jump in
-standardized frequency magnitude explained why.
+Blind testing then showed that the selected model did not provide a usable score under compound
+domain shift: every image was classified fake and almost every probability rounded to one. Raw-margin
+AUC recovered to .760 on SID and .714 on LAION/DALL-E, but remained .538 on COCO/DALL-E. Frequency
+features roughly $42\times$ beyond the clean-CIFAKE maximum explained the numerical saturation.
 
 Removing that branch and fitting a semantic-only probe on balanced, multi-domain data produced a
 better promotion candidate. The candidate passed the recorded SID and WildFake gates, although its CIFAKE
@@ -541,7 +605,7 @@ composite fell to 0.927228. This is an engineering trade-off, not a contradictio
 
 My next step is an independent post-promotion evaluation on generators and source pipelines that did
 not influence fitting, calibration, or gating. Until then, the strongest supported claim is narrow but
-useful: transformation robustness and cross-generator transfer must be measured separately, and
+useful: transformation robustness and compound domain transfer must be measured separately, and
 branch-level out-of-distribution checks can prevent a strong benchmark score from promoting a brittle
 model.
 
@@ -629,12 +693,14 @@ WildFake.
 
 \noindent\textbf{Frozen blind evaluation.}
 \path{outputs/cross_domain_summary.json}; branch diagnostics in
-\path{data/blind-test/ablation_results.json}.
+\path{data/blind-test/ablation_results.json}; margin, uncertainty, calibration, metadata, and overlap
+audit in \path{outputs/shift_audit.json}.
 
 \noindent\textbf{Promoted model.}
 Training recipe and gates in \path{outputs/native_metrics.json}; per-condition results in
 \path{outputs/robustness_table.csv}; wall-clock stages in
-\path{outputs/native_training_timing.json}.
+\path{outputs/native_training_timing.json}; native individual and chained stress tests in
+\path{outputs/native_stress.json}.
 
 \noindent\textbf{Inference and report provenance.}
 \path{src/predict.py}; immutable plotted values and recipes in

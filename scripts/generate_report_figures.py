@@ -6,6 +6,7 @@ from pathlib import Path
 from typing import Iterable
 
 import matplotlib.pyplot as plt
+import numpy as np
 from matplotlib.patches import FancyBboxPatch
 from PIL import Image, ImageDraw, ImageFont
 
@@ -814,11 +815,12 @@ def _standard_robustness_figure() -> None:
     axis.set_xlim(-0.12, 0.005)
     axis.axvline(0.0, color=INK, linewidth=0.9)
     axis.set_xlabel(f"Change in ROC AUC from clean ({clean_auc:.3f})")
-    for position, change in zip(positions, changes):
+    for position, row, change in zip(positions, transformed_rows, changes):
         axis.text(
-            min(change + 0.002, -0.001),
+            change - 0.0015,
             position,
-            f"{change:+.3f}",
+            f"{float(row['auc']):.3f}",
+            ha="right",
             va="center",
             fontsize=8,
             weight="bold",
