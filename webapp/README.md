@@ -44,3 +44,74 @@ npm run build
 Set-Location ..\..
 .\.venv-amd\Scripts\python.exe -m uvicorn webapp.backend.main:app --host 0.0.0.0 --port 8000
 ```
+
+## Deploy the backend to Modal
+
+Modal runs the FastAPI API on a T4 GPU. The deployment uses one container because active round IDs
+are held in process memory. The container scales to zero after ten idle minutes. Cloudflare Pages
+serves the production frontend separately.
+
+Install and authenticate the Modal CLI from the repository root:
+
+```powershell
+uv pip install --python .\.venv-amd\Scripts\python.exe -r webapp\requirements-modal.txt
+.\.venv-amd\Scripts\modal.exe setup
+```
+
+Create a named volume and upload the trusted classifier bundle and labeled challenge images. This
+is a one-time operation unless either asset changes.
+
+```powershell
+.\.venv-amd\Scripts\modal.exe volume create human-vs-ai-assets
+.\.venv-amd\Scripts\modal.exe volume put human-vs-ai-assets outputs\model.joblib /model.joblib
+.\.venv-amd\Scripts\modal.exe volume put human-vs-ai-assets data\downloads\test /challenge
+```
+
+Deploy the API. Modal bakes the Python dependencies and current OpenCLIP checkpoint into its image;
+the classifier and challenge images stay on the read-only volume.
+
+```powershell
+.\.venv-amd\Scripts\modal.exe deploy webapp\modal_app.py --strategy recreate
+```
+
+The backend is available at `https://timseah--human-vs-ai-play.modal.run`. To replace the
+classifier later, run:
+
+```powershell
+.\.venv-amd\Scripts\modal.exe volume put --force human-vs-ai-assets outputs\model.joblib /model.joblib
+.\.venv-amd\Scripts\modal.exe deploy --strategy recreate webapp\modal_app.py
+```
+
+If a new artifact uses a different OpenCLIP model or pretrained checkpoint, update
+`OPENCLIP_MODEL_NAME` and `OPENCLIP_PRETRAINED` in `modal_app.py` before redeploying.
+
+## Deploy the frontend to Cloudflare Pages
+
+The production Vite build reads `VITE_API_BASE_URL` from `.env.production` and calls the Modal API
+directly. Static HTML, JavaScript, CSS, and fonts are served by Cloudflare; model inference and
+challenge images remain on Modal.
+
+For the first deployment on a new machine, authenticate Wrangler. The `human-vs-ai` Pages project
+already exists, so do not recreate it.
+
+```powershell
+npx --yes wrangler@4.127.1 login
+```
+
+Build and deploy the production frontend from the repository root:
+
+```powershell
+Set-Location webapp\frontend
+npm ci
+npm run build
+Set-Location ..\..
+npx --yes wrangler@4.127.1 pages deploy webapp\frontend\dist --project-name human-vs-ai --branch main
+```
+
+The stable frontend URL is `https://human-vs-ai-ce2.pages.dev`. Cloudflare may also print an
+immutable deployment-specific URL after each upload.
+
+The Modal frontend is not a separate process that can be stopped independently. This deployment
+excludes frontend files from the Modal image, and the Modal root returns 404. Actual site visits
+still call `/api/status`, which starts the GPU backend when it has scaled to zero. After ten idle
+minutes, `min_containers=0` allows active Modal compute to return to zero.
