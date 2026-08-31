@@ -61,12 +61,12 @@ jobs:
           gitHubToken: ${{ secrets.GITHUB_TOKEN }}
           wranglerVersion: "4.127.1"
           workingDirectory: webapp/frontend
-          command: pages deploy dist --project-name=human-vs-ai --branch=main
+          command: pages deploy dist --project-name=real-vs-ai --branch=main
 
       - name: Verify production site
         if: github.event_name != 'pull_request'
         run: >-
           curl --fail --show-error --silent
           --retry 5 --retry-all-errors --retry-delay 3
-          https://human-vs-ai-ce2.pages.dev/
+          https://real-vs-ai.pages.dev/
           > /dev/null

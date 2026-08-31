@@ -91,7 +91,7 @@ The production Vite build reads `VITE_API_BASE_URL` from `.env.production` and c
 directly. Static HTML, JavaScript, CSS, and fonts are served by Cloudflare; model inference and
 challenge images remain on Modal.
 
-For the first deployment on a new machine, authenticate Wrangler. The `human-vs-ai` Pages project
+For the first deployment on a new machine, authenticate Wrangler. The `real-vs-ai` Pages project
 already exists, so do not recreate it.
 
 ```powershell
@@ -105,10 +105,10 @@ Set-Location webapp\frontend
 npm ci
 npm run build
 Set-Location ..\..
-npx --yes wrangler@4.127.1 pages deploy webapp\frontend\dist --project-name human-vs-ai --branch main
+npx --yes wrangler@4.127.1 pages deploy webapp\frontend\dist --project-name real-vs-ai --branch main
 ```
 
-The stable frontend URL is `https://human-vs-ai-ce2.pages.dev`. Cloudflare may also print an
+The stable frontend URL is `https://real-vs-ai.pages.dev`. Cloudflare may also print an
 immutable deployment-specific URL after each upload.
 
 The Modal frontend is not a separate process that can be stopped independently. This deployment
@@ -125,7 +125,7 @@ Add these encrypted repository secrets under **Settings > Secrets and variables 
 
 | Secret | Value |
 | --- | --- |
-| `CLOUDFLARE_ACCOUNT_ID` | The Cloudflare account ID that owns the `human-vs-ai` Pages project. |
+| `CLOUDFLARE_ACCOUNT_ID` | The Cloudflare account ID that owns the `real-vs-ai` Pages project. |
 | `CLOUDFLARE_API_TOKEN` | A Cloudflare API token scoped to that account with Workers/Pages edit access. |
 | `MODAL_TOKEN_ID` | The ID of a dedicated Modal API token. |
 | `MODAL_TOKEN_SECRET` | The secret for the same Modal API token. |
@@ -135,7 +135,7 @@ Modal token from **Modal Dashboard > Settings > API Tokens**. Enter token values
 never add them to this repository or a local environment file.
 
 `cloudflare-pages.yml` runs frontend lint and build checks, deploys `webapp/frontend/dist` to the
-existing `human-vs-ai` Pages project, and verifies the production URL. `modal-backend.yml` runs the
+existing `real-vs-ai` Pages project, and verifies the production URL. `modal-backend.yml` runs the
 backend tests, uploads the tracked `outputs/model.joblib` to the existing Volume, recreates the
 Modal deployment, and verifies `/api/status`. Challenge images remain in the persistent Volume and
 are not uploaded by CI.
