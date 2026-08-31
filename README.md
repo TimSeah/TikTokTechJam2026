@@ -1,6 +1,6 @@
 # Real or Fake?
 
-**A transform-robust AI-image detector and live human-versus-machine challenge.**
+**An image detector and a game where you compete against it.**
 
 [Play the live hybrid demo](https://real-vs-ai.pages.dev) ·
 [Read the report (PDF)](docs/technical_report.pdf) ·
@@ -10,19 +10,20 @@
 [![License: MIT](https://img.shields.io/badge/license-MIT-171918.svg)](LICENSE)
 [![Live demo](https://img.shields.io/badge/live_demo-play-d8ff3e.svg)](https://real-vs-ai.pages.dev)
 
-A lightweight detector for AI-generated images under JPEG compression, blur, resizing, noise,
-color jitter, and cropping. The promoted repository model fits a scaled logistic-regression classifier on
-frozen OpenCLIP `ViT-B-32-quickgelu` semantic embeddings from balanced CIFAKE, SID-Set, and
-WildFake domains. Every training image contributes one clean and one individually augmented view.
+Real or Fake detects AI-generated images after common changes such as JPEG compression, blur,
+resizing, noise, color jitter, and cropping. For the final model, I used a scaled logistic-regression
+classifier trained on frozen OpenCLIP `ViT-B-32-quickgelu` embeddings. Training used balanced CIFAKE,
+SID-Set, and WildFake domains, with one clean view and one individually augmented view for each
+training image.
 
-Built for **TikTok TechJam 2026, Track 5: Robust Detection of AI-Generated Images Under Real-World
-Transformations**.
+I built it for **TikTok TechJam 2026, Track 5: Robust Detection of AI-Generated Images Under
+Real-World Transformations**.
 
 ## Live Demo
 
-The deployed ten-round challenge scores the player and the frozen detector on the same labeled
-image, comparing both accuracy and response time. The React frontend runs on Cloudflare Pages; a
-FastAPI service on Modal performs OpenCLIP inference on a T4 GPU.
+The deployed challenge is a ten-round game. In each round, the player and the detector classify the
+same labeled image, and the game compares both accuracy and response time. The React frontend runs
+on Cloudflare Pages, while a FastAPI service on Modal runs OpenCLIP inference on a T4 GPU.
 
 | Choose a side | Compare the calls |
 | :---: | :---: |
@@ -32,21 +33,21 @@ FastAPI service on Modal performs OpenCLIP inference on a T4 GPU.
 
 ![Mobile ready screen for the Real or Fake challenge](docs/assets/webapp-mobile.png)
 
-The live flow was rechecked with Chrome DevTools on 1 September 2026 at desktop and mobile
-viewports: status, round creation, image delivery, and guess submission all returned HTTP 200 with
-no console warnings or errors.
+I checked the live flow with Chrome DevTools on 1 September 2026 at desktop and mobile viewport
+sizes. Status, round creation, image delivery, and guess submission all returned HTTP 200, with no
+console warnings or errors.
 
-The hosted Modal backend currently reports `ViT-B-32-quickgelu / hybrid_augmented`; the captures
-above therefore show the original hybrid deployment. The repository and local demo default to the
-newly promoted `semantic_native_mixed` artifact. Modal must be redeployed before the hosted game is
-presented as evidence of the new model.
+The hosted Modal backend still reports `ViT-B-32-quickgelu / hybrid_augmented`, so the screenshots
+above show the older hybrid deployment. The repository and local demo use the newer
+`semantic_native_mixed` artifact. The Modal service needs to be redeployed before the hosted game
+can be used as evidence for the new model.
 
 ## Results
 
-The promoted `semantic_native_mixed` artifact passed all promotion gates. It was trained on 4,000
-REAL and 4,000 FAKE images from each of CIFAKE, SID-Set, and an allowed WildFake partition, with
-clean and deterministic augmented views for 48,000 fitting rows. The threshold was calibrated only
-on a disjoint 1,000-image SID holdout. Robust AUC is the mean across all 14 individually applied
+The final `semantic_native_mixed` artifact passed all of the required checks. Training used 4,000
+REAL and 4,000 FAKE images from each of CIFAKE, SID-Set, and an allowed WildFake partition. Clean
+and deterministic augmented views produced 48,000 fitting rows. I calibrated the threshold only on
+a separate 1,000-image SID holdout. Robust AUC is the mean across 14 individually applied
 transform/severity conditions on the 20,000-image CIFAKE test split.
 
 | Metric | Score |
@@ -68,10 +69,10 @@ transform/severity conditions on the 20,000-image CIFAKE test split.
 | WildFake COCO/DALL-E | 0.700000 | 0.902925 | Pass |
 | WildFake LAION/DALL-E matched | 0.750000 | 0.912700 | Pass |
 
-All native gates also require nontrivial score variance, a predicted-FAKE rate between 5% and 95%,
-and a higher FAKE median than REAL median. The candidate passed every check before atomically
-replacing `outputs/model.joblib`. Feature extraction, fitting, gating, and promotion took 547.063
-seconds under a hard 3,600-second budget.
+The native checks also require nontrivial score variance, a predicted-FAKE rate between 5% and 95%,
+and a higher median FAKE score than REAL score. The candidate passed every check before it replaced
+`outputs/model.joblib`. Feature extraction, fitting, evaluation, and promotion took 547.063 seconds
+under a hard 3,600-second budget.
 
 Current artifact SHA-256:
 `0c1cf7d6dc1c7ec3b4e3885d5a76d0b1ed7b2908fce7bdb5be4991b9208449cf`. The complete gate records
@@ -80,9 +81,9 @@ and per-stage timings are in [outputs/native_metrics.json](outputs/native_metric
 
 ### Previous Iteration
 
-The original `hybrid_augmented` iteration achieved a stronger CIFAKE-only composite but failed
-catastrophically on native images because its standardized FFT features shifted far outside the
-CIFAKE distribution.
+The first `hybrid_augmented` version scored better on the CIFAKE composite, but performed very
+poorly on native images. Its standardized FFT features had shifted far outside the CIFAKE
+distribution.
 
 | Ablation | Clean AUC | Robust AUC | Final Score |
 | --- | ---: | ---: | ---: |
@@ -90,16 +91,17 @@ CIFAKE distribution.
 | Semantic + FFT, clean training | **0.991760** | 0.910941 | 0.951351 |
 | Semantic + FFT, clean + augmented training | 0.988409 | **0.956211** | **0.972310** |
 
-The current model's full tables are [outputs/robustness_table.csv](outputs/robustness_table.csv) and
-[outputs/ablation_table.csv](outputs/ablation_table.csv). Historical three-model results are
-preserved in [outputs/clean_metrics.json](outputs/clean_metrics.json) and the
-[versioned diagnostic summary](outputs/cross_domain_summary.json).
+The full tables for the current model are in [outputs/robustness_table.csv](outputs/robustness_table.csv)
+and [outputs/ablation_table.csv](outputs/ablation_table.csv). The earlier three-model results remain
+available in [outputs/clean_metrics.json](outputs/clean_metrics.json) and the
+[diagnostic summary](outputs/cross_domain_summary.json).
 
 ### Cross-Domain Diagnostic
 
-Transformation robustness did not imply generator or source generalization. The first hybrid model
-predicted every native image as fake and ranked at chance. That failure led to semantic-only
-retraining with native-resolution data, disjoint calibration, and mandatory cross-domain gates.
+Doing well after transformations did not guarantee that the model would generalize to new generators
+or image sources. The first hybrid model predicted every native image as fake and ranked close to
+chance. In response, I retrained with semantic features and native-resolution data, kept calibration
+separate, and added cross-domain checks before selecting the final model.
 
 | Model iteration | SID validation AUC | WildFake COCO/DALL-E AUC | WildFake LAION/DALL-E AUC |
 | --- | ---: | ---: | ---: |
@@ -107,18 +109,19 @@ retraining with native-resolution data, disjoint calibration, and mandatory cros
 | Original semantic component | 0.886975 | 0.767975 | 0.740600 |
 | **Promoted semantic native mix** | **0.991900** | **0.902925** | **0.912700** |
 
-The three native gates remain balanced 400-image diagnostics rather than the full organizer
-benchmark. None of their images or hashes entered fitting or calibration. The original protocol,
-bootstrap intervals, and failure analysis are in the
-[versioned original-model summary](outputs/cross_domain_summary.json). Current-model gate evidence
-is in [outputs/native_metrics.json](outputs/native_metrics.json).
+The native gates use three balanced 400-image diagnostic sets; they are not the full organizer
+benchmark.
+None of their images or hashes entered fitting or calibration. The original protocol, bootstrap
+intervals, and failure analysis are in the
+[original-model summary](outputs/cross_domain_summary.json). Evidence for the current model is in
+[outputs/native_metrics.json](outputs/native_metrics.json).
 
 ## Approach
 
-Each image produces one normalized 512-dimensional OpenCLIP vector. A
-`StandardScaler + LogisticRegression` pipeline is fitted with equal class and domain contributions.
-The frozen backbone is shared by clean and transformed views; FFT extraction is bypassed for this
-artifact.
+Each image produces a normalized 512-dimensional OpenCLIP vector. I fit a
+`StandardScaler + LogisticRegression` pipeline while giving each class and domain equal weight. The
+same frozen backbone handles clean and transformed views. The final artifact does not use FFT
+features.
 
 ```mermaid
 flowchart LR
@@ -130,19 +133,20 @@ flowchart LR
   I --> J[Continuous fake score]
 ```
 
-### Why this isn't a direct replication
+### How the final model differs
 
-A bare frozen-CLIP linear probe is included only as an earlier ablation. The promoted pipeline adds
+The bare frozen-CLIP linear probe provides an earlier comparison. For the final pipeline, I added
 balanced multi-domain fitting, deterministic family-balanced augmentation, disjoint threshold
-calibration, frozen-ID/hash exclusions, and anti-collapse cross-domain promotion gates. The
-iteration history reports both the benefit and the failure of the earlier frequency branch.
+calibration, frozen-ID/hash exclusions, and cross-domain checks that prevent obvious prediction
+collapse. The results below show why the earlier frequency branch was useful for some CIFAKE tests
+but was not suitable for the final model.
 
 ## Setup
 
 ### Windows 11 with AMD Radeon RX 7900 XTX
 
-Requires Python 3.12 and AMD Software: Adrenalin Edition 26.2.2 or newer. The environment below has
-been validated locally with Adrenalin 26.6.4, PyTorch 2.9.1, and ROCm 7.2.1.
+This setup requires Python 3.12 and AMD Software: Adrenalin Edition 26.2.2 or newer. The environment
+below was validated locally with Adrenalin 26.6.4, PyTorch 2.9.1, and ROCm 7.2.1.
 
 ```powershell
 git clone https://github.com/TimSeah/TikTokTechJam2026.git
@@ -157,14 +161,14 @@ python scripts/check_environment.py --require-gpu --benchmark-clip
 
 ### Colab, CUDA, or CPU
 
-Use a Python 3.12 environment. Colab already supplies a compatible CUDA build of PyTorch.
+Use a Python 3.12 environment. Colab already includes a compatible CUDA build of PyTorch.
 
 ```bash
 pip install -r requirements.txt
 python scripts/check_environment.py --benchmark-clip --batch-size 1 --device cpu
 ```
 
-Datasets are not committed to the repo; see
+The datasets are not committed to the repository. See
 [docs/plan/01-data-acquisition/data-acquisition.md](docs/plan/01-data-acquisition/data-acquisition.md)
 and [data/README.md](data/README.md). Download CIFAKE with the authenticated Kaggle CLI:
 
@@ -176,7 +180,7 @@ and [data/README.md](data/README.md). Download CIFAKE with the authenticated Kag
 
 ## Reproduce
 
-Run from the repository root. On native AMD, set
+Run these commands from the repository root. On native AMD, set
 `$env:ROCM_SDK_TARGET_FAMILY = "custom"` in each new terminal.
 
 ```powershell
@@ -236,7 +240,7 @@ python -m src.detector.evaluate --model outputs/model.joblib `
 ```
 
 For a quick integration check, add `--limit 200` to feature extraction. Feature shards are written
-atomically and existing shards are skipped on restart.
+atomically, and existing shards are skipped when a run is restarted.
 
 ## Inference
 
@@ -245,29 +249,29 @@ python src/predict.py --input_dir path/to/images --out preds.json --device auto
 python src/predict.py --input_dir path/to/images --out preds.json --device cpu
 ```
 
-The CLI recursively reads `.jpg`, `.jpeg`, `.png`, and `.webp`, skips corrupt files, and writes a
-deterministically ordered JSON list. Its default judge-facing schema is exactly:
+The CLI recursively reads `.jpg`, `.jpeg`, `.png`, and `.webp` files, skips corrupt files, and writes
+a deterministically ordered JSON list. By default, it uses this judge-facing schema:
 
 ```json
 [{"image_path": "example.jpg", "pred": 0.731}]
 ```
 
-`pred` is continuous `P(FAKE)`. `--include_label` optionally adds a human-readable label at the
+`pred` is continuous `P(FAKE)`. `--include_label` optionally adds a human-readable label using the
 artifact's calibrated `0.781959` threshold. Inference reads the feature mode from the artifact, so
-this semantic model does not compute FFT features.
+the semantic model does not compute FFT features.
 
-A fresh two-image smoke test with the promoted artifact passed on AMD and forced CPU: `fake.jpg`
-scored `0.989305` on GPU and `0.989272` on CPU, while `real.jpg` scored `0.011023` and `0.010834`.
-Both paths produced the same FAKE/REAL labels and required JSON ordering.
+In a fresh two-image smoke test, the artifact passed on both AMD and forced CPU. `fake.jpg` scored
+`0.989305` on GPU and `0.989272` on CPU; `real.jpg` scored `0.011023` and `0.010834`. Both runs
+produced the same FAKE/REAL labels and the required JSON ordering.
 
-Use `--model` to select a compatible artifact, `--batch-size` to tune memory use, and `--workers 0`
-when multiprocessing is undesirable. Scores are useful for ranking within the evaluated domain;
+Use `--model` to select a compatible artifact, `--batch-size` to adjust memory use, and `--workers 0`
+to disable multiprocessing. Scores are useful for ranking images within the evaluated domain, but
 they are not calibrated real-world probabilities.
 
 ## Run the Demo Locally
 
-The React + FastAPI challenge compares a player's label and response time with the final detector
-over ten rounds. It defaults to `outputs/model.joblib` and the local CIFAKE test directory.
+The React + FastAPI challenge compares the player's label and response time with the final detector
+over ten rounds. It uses `outputs/model.joblib` and the local CIFAKE test directory by default.
 
 ```powershell
 Set-Location webapp/frontend
@@ -277,11 +281,11 @@ Set-Location ../..
 python -m uvicorn webapp.backend.main:app --host 127.0.0.1 --port 8000
 ```
 
-Open `http://127.0.0.1:8000`, or use the hosted version at
-<https://real-vs-ai.pages.dev>. The local API serves the compiled frontend from the same origin;
-production serves the frontend and inference API separately. The local backend defaults to the
-promoted repository artifact; the hosted backend remains on the historical hybrid until it is
-redeployed. Deployment and CI/CD details are in [webapp/README.md](webapp/README.md).
+Open `http://127.0.0.1:8000` or use the hosted version at
+<https://real-vs-ai.pages.dev>. The local API serves the compiled frontend from the same origin. In
+production, the frontend and inference API are served separately. The local backend uses the final
+repository artifact; the hosted backend remains on the older hybrid model until it is redeployed.
+Deployment and CI/CD details are in [webapp/README.md](webapp/README.md).
 
 ## Repository Layout
 
@@ -323,48 +327,49 @@ requirements.txt
 
 ## Limitations
 
-- CIFAKE is only 32x32 and uses one generated-image process, so strong in-distribution AUC does not
-  establish broad modern-generator detection.
-- The native SID and WildFake gates contain 400 images each; they are stronger than CIFAKE-only
-  validation but are not substitutes for a large hidden cross-generator benchmark.
-- The promoted semantic model gives up some CIFAKE clean and transformed AUC to avoid the severe
-  native-resolution distribution shift observed in the earlier FFT branch.
-- WildFake fitting uses nine allowed source groups and excludes COCO val2017, DALL-E Advanced, every
-  frozen evaluation ID, and every frozen evaluation hash. Unseen generators can still differ.
-- Probabilities are useful for ranking but are not calibrated for deployment prevalence or every
-  image distribution. This prototype must not be the sole basis for moderation, attribution,
+- CIFAKE images are only 32x32 and come from one generated-image process. A strong CIFAKE AUC does
+  not show that my model will detect images from current generators in general.
+- I used 400-image native SID and WildFake gates. They are more useful than CIFAKE-only validation,
+  but they are not a substitute for a large hidden cross-generator benchmark.
+- My final semantic model gives up some CIFAKE clean and transformed AUC to avoid the severe
+  native-resolution shift I saw with the earlier FFT branch.
+- For WildFake fitting, I used nine allowed source groups and excluded COCO val2017, DALL-E Advanced,
+  every frozen evaluation ID, and every frozen evaluation hash. Images from unseen generators may
+  still behave differently.
+- The scores are useful for ranking, but I did not calibrate them for deployment prevalence or every
+  image distribution. This prototype should not be used by itself for moderation, attribution,
   copyright, fraud, or disciplinary decisions.
-- Next steps are larger source-disjoint hidden evaluation, compound-transform testing, prevalence
-  calibration, and fairness analysis.
+- My next steps are a larger source-disjoint hidden evaluation, compound-transform testing,
+  prevalence calibration, and fairness analysis.
 
 ## Team
 
-Solo project by Timothy Seah: data pipeline, detector, robustness evaluation, inference CLI,
-analysis, and documentation.
+This is a solo project by Timothy Seah. I built the data pipeline, detector, robustness evaluation,
+inference CLI, analysis, and documentation.
 
 ## Documentation
 
-- [docs/technical_report.pdf](docs/technical_report.pdf): polished two-column submission report with
+- [docs/technical_report.pdf](docs/technical_report.pdf): two-column submission report with
   reproducible analytical figures.
 - [docs/problem_statement.md](docs/problem_statement.md): full hackathon problem statement (all
   tracks), plus supplementary workshop notes for Track 5 in §5.7.
-- [docs/plan/README.md](docs/plan/README.md): original time-boxed strategy and per-phase completion
+- [docs/plan/README.md](docs/plan/README.md): original time-boxed plan and per-phase completion
   records.
-- [outputs/model_card.md](outputs/model_card.md): model details and measured limitations.
-- [outputs/native_metrics.json](outputs/native_metrics.json): current fitting protocol, threshold,
+- [outputs/model_card.md](outputs/model_card.md): details about my model and its measured limitations.
+- [outputs/native_metrics.json](outputs/native_metrics.json): my fitting protocol, threshold,
   and all five promotion-gate results.
-- [outputs/native_training_timing.json](outputs/native_training_timing.json): successful 547.063-second
-  final training run with per-stage status.
+- [outputs/native_training_timing.json](outputs/native_training_timing.json): final 547.063-second
+  training run with per-stage status.
 - [outputs/error_analysis.md](outputs/error_analysis.md): four current-model high-confidence
   heavy-blur errors.
-- [outputs/trade_offs.md](outputs/trade_offs.md): current CIFAKE, cross-domain, and feasibility
-  trade-offs, with the original hybrid retained as comparison evidence.
+- [outputs/trade_offs.md](outputs/trade_offs.md): CIFAKE, cross-domain, and feasibility trade-offs,
+  with the original hybrid retained as comparison evidence.
 - [outputs/cross_domain_summary.json](outputs/cross_domain_summary.json): frozen-model blind
-  diagnostics, component ablations, and preliminary remediation status.
+  diagnostics, component ablations, and remediation notes.
 - [outputs/devpost_description.md](outputs/devpost_description.md): original-model Devpost draft;
-  update it for the promoted semantic model before publication.
-- [outputs/demo_script.md](outputs/demo_script.md): 2–4 minute demo shot list; the public YouTube URL
-  must still be added to Devpost after recording.
+  update it for the final semantic model before publication.
+- [outputs/demo_script.md](outputs/demo_script.md): 2–4 minute demo shot list. Add the public YouTube
+  URL to Devpost after recording.
 
 ## License
 
