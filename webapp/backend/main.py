@@ -5,7 +5,7 @@ from typing import Literal
 
 from fastapi import Depends, FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse, Response
+from fastapi.responses import Response
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
@@ -67,25 +67,33 @@ def get_status(game: ChallengeGame = Depends(get_game)) -> dict:
 @app.post("/api/rounds")
 def create_round(game: ChallengeGame = Depends(get_game)) -> dict:
     try:
-        round_id, _ = game.create_round()
+        round_id, challenge_round = game.create_round()
     except RuntimeError as error:
         raise HTTPException(status_code=503, detail=str(error)) from error
     return {
         "round_id": round_id,
         "image_url": f"/api/rounds/{round_id}/image",
+        "augmentation": {
+            "key": challenge_round.augmentation_key,
+            "label": challenge_round.augmentation_label,
+        },
     }
 
 
 @app.get("/api/rounds/{round_id}/image")
 def get_round_image(
     round_id: str, game: ChallengeGame = Depends(get_game)
-) -> FileResponse:
+) -> Response:
     challenge_round = game.get_round(round_id)
     if challenge_round is None:
         raise HTTPException(
             status_code=404, detail="Round not found or already finished"
         )
-    return FileResponse(challenge_round.image.path)
+    return Response(
+        content=game.render_round_image(challenge_round),
+        media_type="image/png",
+        headers={"Cache-Control": "no-store"},
+    )
 
 
 @app.post("/api/rounds/{round_id}/guess")

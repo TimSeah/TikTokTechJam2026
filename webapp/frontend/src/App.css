@@ -246,10 +246,44 @@ body {
   min-height: 0;
   padding: 22px;
   display: grid;
-  grid-template-rows: auto auto;
+  grid-template-rows: auto auto auto;
   align-content: center;
   gap: 16px;
   background: #dfe5e0;
+}
+
+.augmentation-strip {
+  width: min(100%, 560px);
+  min-height: 42px;
+  padding: 8px 12px;
+  justify-self: center;
+  display: grid;
+  grid-template-columns: auto auto minmax(0, 1fr);
+  align-items: center;
+  gap: 9px;
+  color: white;
+  background: var(--ink);
+  border-left: 5px solid var(--acid);
+}
+
+.augmentation-strip svg {
+  width: 18px;
+  color: var(--acid);
+}
+
+.augmentation-strip span {
+  color: #b8c1ba;
+  font-size: 10px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.augmentation-strip strong {
+  min-width: 0;
+  overflow-wrap: anywhere;
+  font-family: 'Space Grotesk Variable', sans-serif;
+  font-size: 14px;
+  text-align: right;
 }
 
 .image-stage {
@@ -884,6 +918,18 @@ body {
   .image-stage,
   .image-stage img {
     min-height: 0;
+  }
+
+  .augmentation-strip {
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+
+  .augmentation-strip span {
+    display: none;
+  }
+
+  .augmentation-strip strong {
+    text-align: left;
   }
 
   .decision-bar {

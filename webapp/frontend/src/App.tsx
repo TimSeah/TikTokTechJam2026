@@ -10,6 +10,7 @@ import {
   Play,
   RefreshCw,
   ScanFace,
+  SlidersHorizontal,
   Sparkles,
   Target,
   Timer,
@@ -41,6 +42,10 @@ interface ApiStatus {
 interface RoundStart {
   round_id: string
   image_url: string
+  augmentation: {
+    key: string
+    label: string
+  }
 }
 
 interface RoundResult {
@@ -103,6 +108,7 @@ function App() {
 
   async function loadRound() {
     setPhase('loading')
+    setRound(null)
     setResult(null)
     setElapsedMs(0)
     shownAtRef.current = null
@@ -427,6 +433,16 @@ function App() {
             </div>
           ) : (
             <>
+              {round && (
+                <div
+                  className="augmentation-strip"
+                  aria-label={`Applied augmentation: ${round.augmentation.label}`}
+                >
+                  <SlidersHorizontal aria-hidden="true" />
+                  <span>Applied augmentation</span>
+                  <strong>{round.augmentation.label}</strong>
+                </div>
+              )}
               <div
                 className={`image-stage ${
                   result ? `answer-${result.ground_truth.toLowerCase()}` : ''

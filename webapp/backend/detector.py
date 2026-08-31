@@ -123,7 +123,10 @@ class DetectorService:
     def predict(self, image_path: Path) -> Prediction:
         with Image.open(image_path) as opened_image:
             image = opened_image.convert("RGB")
+        return self.predict_image(image)
 
+    def predict_image(self, image: Image.Image) -> Prediction:
+        image = image.convert("RGB")
         with self._inference_lock:
             started_at = time.perf_counter()
             semantic_input = self.preprocess(image).unsqueeze(0).to(self.device)

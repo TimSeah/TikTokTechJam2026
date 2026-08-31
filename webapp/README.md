@@ -12,7 +12,9 @@ ready. The bundle supplies its matching OpenCLIP model name, checkpoint, feature
 threshold. Only load model artifacts that you trust because `joblib` files can execute code while
 loading.
 
-`CHALLENGE_DATASET_PATH` must contain images below directories named `REAL` and `FAKE`.
+`CHALLENGE_DATASET_PATH` must contain images below directories named `REAL` and `FAKE`. To
+combine several challenge sets, use the comma-separated `CHALLENGE_DATASET_PATHS` setting instead;
+when present, it takes precedence over the singular path.
 
 ## Develop
 
