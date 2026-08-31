@@ -1,7 +1,7 @@
-# Phase 2 — Baseline Detector
+# Phase 2 — Baseline Detector: Completion Record
 
-Goal: first prove a 200-image end-to-end vertical slice, then train a **hybrid** real-vs-fake
-classifier — frozen CLIP ViT-B/32 semantic embeddings fused with a lightweight frequency-domain
+Original goal: first prove a 200-image end-to-end vertical slice, then train a **hybrid** real-vs-fake
+classifier — frozen OpenCLIP `ViT-B-32-quickgelu` semantic embeddings fused with a lightweight frequency-domain
 feature branch — on full, augmented CIFAKE data using the selected GPU path. Produce restartable
 feature caches, a CPU-loadable inference artifact, and ablations that measure the contribution of
 frequency fusion and augmentation.
@@ -17,6 +17,19 @@ Image Detectors" method unmodified. Fusing in a frequency-domain branch (Slide 7
 insight — CLIP semantics catch what frequency artifacts miss and vice versa) and training on
 augmented data (Slide 8's stated "key idea") makes this my own pipeline while still using an
 explicitly whitelisted pretrained backbone (CLIP) and staying cheap enough for the time budget.
+
+## Promoted post-submission update
+
+Phase 2 was completed as designed and produced the original `hybrid_augmented` submission model.
+Its `0.972310` CIFAKE Final Score remains a controlled ablation result, but later native-resolution
+tests showed that the standardized FFT branch drove extreme logits and chance-level SID/WildFake
+ranking. It is therefore not the current inference model.
+
+The promoted `semantic_native_mixed` artifact bypasses FFT extraction. It fits the same frozen
+512-dimensional semantic representation on balanced CIFAKE, SID-Set, and WildFake samples, with
+one clean and one deterministic augmented view per source image. The final 48,000-row fit uses
+equal class and domain contributions, calibrates its `0.781959` threshold on a disjoint SID split,
+and must pass clean and cross-domain gates before promotion.
 
 ## Steps
 
@@ -53,16 +66,35 @@ explicitly whitelisted pretrained backbone (CLIP) and staying cheap enough for t
        recipe, measured parameter count, extraction throughput, and a concise non-replication note.
 11. Sanity-check the saved artifact on individual images using both the selected GPU and forced CPU.
 
+## Outcome
+
+The development slice completed before the full extraction. Restartable clean and augmented caches
+were then produced for all 100,000 CIFAKE training images, with a clean cache for all 20,000
+held-out test images. The original bundle contained three `StandardScaler + LogisticRegression`
+pipelines and selected `hybrid_augmented` for inference. It trained on 100,000 clean rows plus one
+deterministic, individually transformed view of each training image.
+
+The clean ablation AUCs were `0.988755` for semantic-only, `0.991760` for clean hybrid, and
+`0.988409` for augmented hybrid. Those results are preserved as historical ablations in
+[outputs/cross_domain_summary.json](../../../outputs/cross_domain_summary.json).
+
+After diagnosis, the final training runner generated semantic-only SID/WildFake caches, fitted a
+balanced 48,000-row classifier, calibrated the threshold, evaluated five gates, and promoted the
+candidate atomically. The current artifact reaches `0.957820` clean CIFAKE AUC, `0.991900` SID
+validation AUC, and `0.902925` / `0.912700` on the two WildFake evaluations. Its complete current
+configuration is recorded in [outputs/model_card.md](../../../outputs/model_card.md).
+
 ## Definition of done
 
-- [ ] The 200-image vertical slice completes before full extraction begins.
-- [ ] Transform and frequency-feature tests pass for shape, range, determinism, and finite values.
-- [ ] Restartable clean/augmented train caches and clean test caches contain features, labels, IDs,
+- [x] The 200-image vertical slice completed before full extraction began.
+- [x] Transform and frequency-feature tests pass for shape, range, determinism, and finite values.
+- [x] Restartable clean/augmented train caches and clean test caches contain features, labels, IDs,
       and metadata with matching row counts.
-- [ ] All three ablation pipelines train on identical manifests and record clean AUC/accuracy/F1.
-- [ ] The final artifact records all preprocessing/configuration needed for standalone inference and
-      loads on CPU.
-- [ ] `outputs/model_card.md` records the exact checkpoint, data manifest, augmentation recipe,
+- [x] All three original ablation pipelines trained on identical manifests and recorded clean
+      AUC/accuracy/F1; their versioned results remain available after promotion.
+- [x] The current semantic-only artifact records all preprocessing, provenance, threshold, and
+      promotion metadata needed for standalone inference and loads on CPU.
+- [x] `outputs/model_card.md` records the exact checkpoint, data manifest, augmentation recipe,
       throughput, parameter count (<2B), ablations, and novelty/non-replication note.
 
 ## Time budget

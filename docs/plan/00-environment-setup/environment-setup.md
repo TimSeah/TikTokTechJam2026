@@ -1,6 +1,6 @@
-# Phase 0 — Environment & Repo Setup
+# Phase 0 — Environment & Repo Setup: Completion Record
 
-Goal: select and verify one GPU execution path within 45 minutes, install the remaining dependencies,
+Original goal: select and verify one GPU execution path within 45 minutes, install the remaining dependencies,
 and create the repository skeleton before model implementation expands beyond a 200-image slice.
 
 ## Compute-path priority
@@ -31,6 +31,9 @@ CPU or Colab rather than consuming the implementation window.
 - Forced CPU inference passed for one image in 8.178 seconds.
 - `ROCM_SDK_TARGET_FAMILY=custom` is scoped to this workspace to avoid an upstream ROCm launcher
       issue when the virtual-environment path contains spaces.
+- The same environment completed the final 9-stage semantic cache, fit, gate, and promotion run in
+      547.063 seconds. Every stage passed within the hard 3,600-second budget; timing is recorded in
+      [outputs/native_training_timing.json](../../../outputs/native_training_timing.json).
 
 ## Steps
 
@@ -71,9 +74,14 @@ CPU or Colab rather than consuming the implementation window.
 - [x] A forced CPU run embeds one image successfully, preserving reviewer portability.
 - [x] `LICENSE` file present (MIT or Apache).
 - [x] Repo skeleton exists locally.
-- [ ] Environment and skeleton changes are committed and pushed to GitHub.
+- [ ] Final publication state is verified after the remaining documentation and video work is complete.
 - [x] `.gitignore` excludes datasets and large regenerated caches only — trained model weights and
       report files are NOT excluded.
+
+The implementation followed the preferred native Windows AMD path. Reproducible installation now
+lives in `requirements-amd.txt`, the generic CUDA/CPU path in `requirements.txt`, and the executable
+environment check in `scripts/check_environment.py`. The environment remained stable through the
+completed multi-domain retraining and CPU-loadable artifact promotion.
 
 ## Time budget
 

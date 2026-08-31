@@ -1,10 +1,32 @@
-# Phase 1 — Data Acquisition
+# Phase 1 — Data Acquisition: Completion Record
 
-Goal: make a licensed binary train/test dataset available without blocking implementation, record a
+Original goal: make a licensed binary train/test dataset available without blocking implementation, record a
 deterministic manifest, and attempt the exact validation-only WildFake subset only after required
 evaluation artifacts exist.
 
 Reference: [../../problem_statement.md §5.4](../../problem_statement.md#54-available-resources--data)
+
+## Outcome
+
+CIFAKE was acquired from Kaggle and its published split was preserved under `data/downloads/`.
+Seed `2026` produced a 100,000-image training manifest, a 20,000-image held-out test manifest, and a
+balanced 200-image development manifest in `data/manifests/`. The source, license, class mapping,
+counts, and local layout are recorded in [data/README.md](../../../data/README.md).
+
+The official WildFake manifest counts were inspected, but the exact DALL-E Advanced source required
+a 26 GB archive and exceeded the optional acquisition gate. It was not used for training or
+full-scale evaluation, and no smaller result is presented as the full organizer reference. After
+the submitted artifact was frozen, three versioned, balanced 400-image samples were used for
+cross-domain diagnosis.
+
+Post-submission remediation then acquired evaluation-disjoint SID-Set and WildFake-Sample training
+partitions. The promoted model uses 4,000 REAL and 4,000 FAKE source images from each of CIFAKE,
+SID-Set, and WildFake, for 24,000 source images and 48,000 clean-plus-augmented fitting rows. A
+separate 500-per-class SID split was used only to calibrate the decision threshold. Frozen SID and
+WildFake evaluation IDs and content hashes were excluded from fitting and calibration. The exact
+training revisions, allowed WildFake source groups, exclusions, and promotion results are recorded
+in [outputs/model_card.md](../../../outputs/model_card.md) and
+[outputs/native_metrics.json](../../../outputs/native_metrics.json).
 
 ## Steps
 
@@ -31,11 +53,16 @@ Reference: [../../problem_statement.md §5.4](../../problem_statement.md#54-avai
 
 ## Definition of done
 
-- [ ] CIFAKE is populated, or a documented fixed SID_Set manifest is available.
-- [ ] A balanced 200-image development manifest and the final seeded train/test manifests exist.
-- [ ] Image counts, class counts, source URLs, licenses, split policy, and seed are recorded.
-- [ ] Every sampled image decodes and labels map consistently to authentic/AIGC.
-- [ ] If WildFake is present, path/hash overlap checks prove it is absent from training.
+- [x] CIFAKE is populated with the published train/test split.
+- [x] A balanced 200-image development manifest and the final seeded train/test manifests exist.
+- [x] Image counts, class counts, source URLs, license, split policy, and seed are recorded.
+- [x] A 1,000-image validation sample decoded and labels mapped consistently to authentic/AIGC.
+- [x] The full WildFake reference was omitted after the acquisition gate; later smaller diagnostic
+   samples are clearly separated from it and were not used to fit or calibrate either model.
+- [x] Final SID-Set and WildFake fitting partitions contain 4,000 images per class, use recorded
+   source revisions, and exclude every frozen evaluation ID and hash.
+- [x] The SID calibration split, SID validation split, and both WildFake evaluations remain
+   disjoint from the 24,000-image fitting sample.
 
 ## Time budget
 

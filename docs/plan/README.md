@@ -1,4 +1,15 @@
-# Track 5 Execution Plan — Robust Detection of AI-Generated Images
+# Track 5 Execution Plan and Completion Record
+
+The detector, robustness evaluation, inference CLI, analysis, and interactive demo described by
+this plan are implemented. This document preserves the original time-boxed strategy and records
+the resulting evidence; public Devpost submission and video publication remain external steps.
+
+The original sprint produced `hybrid_augmented`, a CIFAKE-only semantic + FFT detector with a
+`0.972310` CIFAKE Final Score. Frozen post-submission diagnostics then exposed chance-level
+cross-domain ranking and score saturation from the FFT branch. The current promoted artifact is
+`semantic_native_mixed`: a semantic-only detector trained on balanced CIFAKE, SID-Set, and WildFake
+data. It passes every recorded promotion gate and reaches a `0.927228` CIFAKE Final Score while
+restoring SID and WildFake ranking performance.
 
 References:
 
@@ -7,14 +18,19 @@ References:
   — organizer workshop slides with competition rules, scoring formula, and recommended methodology
   not present elsewhere in the base problem statement.
 
-## Chosen approach
+## Implemented approach and promoted update
 
-**A hybrid detector: CLIP (ViT-B/32) semantic embeddings fused with a lightweight frequency-domain
-feature branch (FFT/DCT-based), trained on augmented CIFAKE data (clean + transformed copies of
-each training image) and a shallow classifier head (logistic regression / small MLP).** Evaluated
-for robustness against the 6 required transform families, plus a cross-generator generalization
-check when the exact WildFake-derived COCO val2017 / DALL·E Advanced validation subset can be
-obtained after required evaluation — used **only** for evaluation, never for training.
+**Original sprint approach:** frozen OpenCLIP `ViT-B-32-quickgelu` semantic embeddings fused with a
+fixed 32-bin radial log-FFT branch, trained on clean and deterministically augmented CIFAKE
+features with logistic regression. That classifier consumed 544 values per image and was evaluated
+on clean data plus 14 conditions across the 6 required transform families.
+
+**Current promoted approach:** a normalized 512-dimensional OpenCLIP embedding, `StandardScaler`,
+and logistic regression, with no FFT features. Fitting balances 4,000 REAL and 4,000 FAKE source
+images from each of CIFAKE, SID-Set, and an evaluation-disjoint WildFake partition. Every source
+image contributes one clean and one deterministically augmented view, producing 48,000 fitting
+rows. The threshold was calibrated on a separate 1,000-image SID holdout. All CIFAKE, SID, and
+WildFake gates passed before `outputs/model.joblib` was atomically replaced.
 
 ## Compute strategy and decision gate
 
@@ -38,7 +54,7 @@ avoids slow training-data access through `/mnt/c`.
 All project code must remain device-agnostic (`--device auto`) and the final inference smoke test
 must also pass on CPU so reviewers do not need matching GPU hardware.
 
-## Why this approach
+## Why the original approach and update
 
 - **Avoids disqualification risk.** The workshop slides state explicitly: *"Do not directly
   replicate existing models or approaches"* and *"Just using a pre-trained AI image detection model
@@ -59,8 +75,13 @@ must also pass on CPU so reviewers do not need matching GPU hardware.
 - It minimizes time spent on model training/tuning and maximizes time spent on the parts that are
   actually judged: the robustness score formula, generalization check, error analysis, and
   reproducible deliverables.
+- The blind-test failure changed the model-selection rule. The deployed artifact removes the
+  frequency shortcut and adds balanced multi-domain fitting, disjoint threshold calibration,
+  frozen ID/hash exclusions, and mandatory anti-collapse gates. This keeps the implementation
+  lightweight while making cross-domain behavior a promotion requirement rather than a post-hoc
+  observation.
 
-## Timeline (12-hour deadline)
+## Original timeline (12-hour deadline)
 
 | Time | Phase | Exit condition |
 | --- | --- | --- |
@@ -89,35 +110,51 @@ stop expanding evaluation at 6:00, freeze code at 8:30, and submit by 11:00.
 | 4 | Robustness Evaluation Summary | Phase 3 |
 | 5 | Error Analysis Note | Phase 5 |
 
-## Global definition of done (project-level)
+## Evidence map
 
-- [ ] `python src/predict.py --input_dir <image_dir> --out preds.json` runs end-to-end and produces valid JSON with
+| Phase | Implemented evidence |
+| --- | --- |
+| Environment | Native AMD benchmark and dependency pins in [Phase 0](00-environment-setup/environment-setup.md) |
+| Data | Original CIFAKE manifests plus disjoint SID/WildFake fitting, calibration, and frozen evaluation manifests documented in [Phase 1](01-data-acquisition/data-acquisition.md) |
+| Detector | CPU-loadable `semantic_native_mixed` artifact, SHA-256 `0c1cf7d6dc1c7ec3b4e3885d5a76d0b1ed7b2908fce7bdb5be4991b9208449cf`, and [model card](../../outputs/model_card.md) |
+| Robustness | Current [per-condition table](../../outputs/robustness_table.csv) and [summary](../../outputs/robustness_summary.json): `0.927228` Final Score; original `0.972310` hybrid result retained in the [cross-domain summary](../../outputs/cross_domain_summary.json) |
+| Inference | `src/predict.py`, smoke inputs, and GPU/CPU fresh-process timings |
+| Analysis | [Error analysis](../../outputs/error_analysis.md) and [trade-offs](../../outputs/trade_offs.md) |
+| Generalization | [Promotion-gate metrics](../../outputs/native_metrics.json), [training timing](../../outputs/native_training_timing.json), and [versioned original-model diagnosis](../../outputs/cross_domain_summary.json) |
+| Demo | React + FastAPI app in `webapp/`, deployed on Cloudflare Pages and Modal |
+
+## Completion checklist
+
+- [x] `python src/predict.py --input_dir <image_dir> --out preds.json` runs end-to-end and produces valid JSON with
       `image_path` + `pred` for every image in the directory.
-- [ ] The saved artifact contains feature scaling, classifier, class mapping, backbone/checkpoint,
-  preprocessing, frequency-feature configuration, and random seed; it loads on CPU.
-- [ ] A robustness table exists comparing clean vs. each of the 6 transform families (at the listed
+- [x] The saved artifact contains feature mode, scaling, classifier, class mapping,
+  backbone/checkpoint, preprocessing, calibrated threshold, provenance, and random seed; it loads
+  on CPU and bypasses FFT extraction in semantic mode.
+- [x] A robustness table exists comparing clean vs. each of the 6 transform families (at the listed
       severities, or a documented reduced subset) on a held-out test split.
-- [ ] The composite score `Final Score = 0.50 × AUC_clean + 0.50 × AUC_robust` is computed and
+- [x] The composite score `Final Score = 0.50 × AUC_clean + 0.50 × AUC_robust` is computed and
   reported; if the exact validation-only subset is obtained, cross-generator AUC is also reported.
-- [ ] An ablation compares semantic-only clean training, hybrid clean training, and hybrid
-  augmented training using the same held-out images.
-- [ ] An error-analysis note cites concrete false positive / false negative examples with a stated
+- [x] The original ablation compares semantic-only clean training, hybrid clean training, and
+  hybrid augmented training on the same held-out images; the current table reports the promoted
+  model and the versioned summary preserves the original rows.
+- [x] An error-analysis note cites concrete false positive / false negative examples with a stated
       hypothesis for each.
-- [ ] A trade-offs write-up covers robustness vs. clean accuracy, generalization vs. specialization,
+- [x] A trade-offs write-up covers robustness vs. clean accuracy, generalization vs. specialization,
       and complexity vs. feasibility.
-- [ ] README documents setup, reproduction steps, limitations, team contributions, and an explicit
+- [x] README documents setup, reproduction steps, limitations, team contributions, and an explicit
       "why this isn't a direct replication of an existing method" note.
-- [ ] No training occurred on the WildFake/COCO–DALL·E validation-only subset (verify before
-      submission).
-- [ ] Model uses fewer than 2B parameters (confirm and record the count); only publicly available
+- [x] No fitting or calibration used any frozen SID/WildFake evaluation ID or content hash; the
+  allowed WildFake fitting partition excludes COCO val2017 and DALL-E Advanced.
+- [x] Model uses fewer than 2B parameters (151,277,313 frozen backbone parameters plus 513 final
+  linear coefficients/intercept); only publicly available
       pretrained backbones are used (CLIP is explicitly whitelisted).
-- [ ] A LICENSE file (MIT or Apache) is present in the repo.
-- [ ] Trained model artifact (`outputs/detector.joblib` or equivalent) is committed/published in the
+- [x] A LICENSE file (MIT) is present in the repo.
+- [x] Trained model artifact (`outputs/model.joblib`) is committed/published in the
       repo, not gitignored.
 - [ ] Repo is pushed, public, and linked in the Devpost description; demo video is uploaded to
       YouTube (public) and linked.
 
-## Target repository layout (for the implementation phase)
+## Original target repository layout
 
 ```text
 <project-root>/
@@ -134,7 +171,7 @@ stop expanding evaluation at 6:00, freeze code at 8:30, and submit by 11:00.
       evaluate.py                    # robustness table + Final Score computation
     predict.py                        # required CLI: image dir -> JSON
   outputs/
-    detector.joblib                   # complete CPU-loadable inference bundle (committed, not gitignored)
+    model.joblib                      # complete CPU-loadable inference bundle (committed, not gitignored)
     model_card.md                     # backbone, novelty note, parameter count, accuracy
     robustness_table.csv
     ablation_table.csv
@@ -165,9 +202,12 @@ stop expanding evaluation at 6:00, freeze code at 8:30, and submit by 11:00.
 - Time overrun in Phase 3 → evaluate one representative severity from every transform family before
   adding the remaining severities, and label any reduced result as a reduced-protocol score.
 
-## Next step
+## Outcome
 
-Start [00-environment-setup](00-environment-setup/environment-setup.md) and
-[01-data-acquisition](01-data-acquisition/data-acquisition.md) in parallel. The first irreversible
-decision is the 45-minute native AMD/Colab compute gate; implementation begins with a 200-image
-vertical slice immediately after one GPU path passes.
+The native AMD path passed, CIFAKE was acquired, all 14 robustness conditions were evaluated, and
+the CPU-loadable model bundle and required reports were produced. The repository also includes a
+React + FastAPI human-versus-detector challenge with automated Cloudflare Pages and Modal deployment
+workflows. Post-submission retraining then promoted `semantic_native_mixed` after all five recorded
+evaluation gates passed. Its 9-stage extraction, fit, gate, and promotion run completed in 547.063
+seconds under the 3,600-second limit. See the root [README](../../README.md) for current metrics and
+reproduction commands.
