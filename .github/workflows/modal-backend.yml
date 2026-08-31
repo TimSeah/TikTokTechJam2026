@@ -1,0 +1,88 @@
+name: Modal Backend
+
+on:
+  pull_request:
+    paths:
+      - ".github/workflows/modal-backend.yml"
+      - "outputs/model.joblib"
+      - "webapp/backend/**"
+      - "webapp/modal_app.py"
+      - "webapp/requirements.txt"
+      - "webapp/requirements-modal.txt"
+      - "webapp/tests/**"
+  push:
+    branches:
+      - main
+    paths:
+      - ".github/workflows/modal-backend.yml"
+      - "outputs/model.joblib"
+      - "webapp/backend/**"
+      - "webapp/modal_app.py"
+      - "webapp/requirements.txt"
+      - "webapp/requirements-modal.txt"
+      - "webapp/tests/**"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: modal-backend-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  backend:
+    name: Validate and deploy backend
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v6
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: |
+            webapp/requirements.txt
+            webapp/requirements-modal.txt
+
+      - name: Install CPU test dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install --index-url https://download.pytorch.org/whl/cpu "torch>=2.7,<3" "torchvision>=0.22,<1"
+          python -m pip install -r webapp/requirements.txt pytest
+
+      - name: Test backend
+        run: python -m pytest webapp/tests -q
+
+      - name: Compile deployment entrypoint
+        run: python -m py_compile webapp/modal_app.py
+
+      - name: Install Modal CLI
+        if: github.event_name != 'pull_request'
+        run: python -m pip install -r webapp/requirements-modal.txt
+
+      - name: Sync model artifact
+        if: github.event_name != 'pull_request'
+        env:
+          MODAL_TOKEN_ID: ${{ secrets.MODAL_TOKEN_ID }}
+          MODAL_TOKEN_SECRET: ${{ secrets.MODAL_TOKEN_SECRET }}
+        run: modal volume put --force human-vs-ai-assets outputs/model.joblib /model.joblib
+
+      - name: Deploy to Modal
+        if: github.event_name != 'pull_request'
+        env:
+          MODAL_TOKEN_ID: ${{ secrets.MODAL_TOKEN_ID }}
+          MODAL_TOKEN_SECRET: ${{ secrets.MODAL_TOKEN_SECRET }}
+        run: modal deploy webapp/modal_app.py --strategy recreate
+
+      - name: Verify production API
+        if: github.event_name != 'pull_request'
+        run: >-
+          curl --fail --show-error --silent
+          --retry 3 --retry-all-errors --retry-delay 10
+          --max-time 600
+          https://timseah--human-vs-ai-play.modal.run/api/status
