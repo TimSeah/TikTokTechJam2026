@@ -12,6 +12,11 @@ data/
   features/
     train-{clean,augmented}/
     test-{clean,<transform_condition>}/
+    sid-final-{clean,augmented,calibration}/
+    wildfake-final-{clean,augmented}/
+  native-train/
+    sid-final/{REAL,FAKE}/
+    wildfake-final/{REAL,FAKE}/
 ```
 
 ## Completed Dataset
@@ -31,13 +36,28 @@ data/
 each one. The training and evaluation programs consume those manifests instead of independently
 enumerating images.
 
-## Optional Cross-Generator Set
+## Cross-Domain Evaluation and Follow-Up Data
 
 The exact organizer reference is the WildFake COCO val2017 (4,998 real) plus DALL-E Advanced
 (8,843 fake) subset. The official ModelScope manifests were checked and match those counts, but
-cross-generator evaluation was not run: obtaining DALL-E Advanced required downloading a 26 GB
-source archive and exceeded the optional 30-minute acquisition gate. No substitute is reported as
-the organizer benchmark.
+the full evaluation was not run: obtaining DALL-E Advanced required downloading a 26 GB source
+archive and exceeded the optional 30-minute acquisition gate.
 
-Streaming fallback, not used in this run: [SID_Set](https://huggingface.co/datasets/saberzl/SID_Set),
-labels 0 and 1 only.
+After the original artifact was frozen, three balanced 400-image diagnostic samples were obtained
+from versioned Hugging Face sources: SID-Set validation, WildFake COCO/DALL-E Advanced, and a
+LAION/DALL-E matched configuration. These samples were not used to fit the reported model and are
+not presented as the full organizer benchmark. Their protocol and results are recorded in
+[outputs/cross_domain_summary.json](../outputs/cross_domain_summary.json) and the
+[technical report](../docs/technical_report.pdf).
+
+The deployed semantic model uses a deterministic SID-Set sample with 4,000 images per class for
+training and 500 per class for threshold calibration. A separate WildFake sample contributes 4,000
+images per class from `ADM`, `DDPM`, `GALIP`, `GigaGAN`, `VQGAN`, `VQVAE`, `AFHQ`, `CelebA-HQ`,
+and `LSUN-Church`. WildFake COCO val2017 and DALL-E Advanced are hard-forbidden by the acquisition
+code. All 17,000 selected SID/WildFake train and calibration images are hash-unique and have zero
+hash overlap with the frozen evaluation manifests.
+
+Each training image has one clean view and one deterministic transformed view. Exactly one of JPEG,
+blur, resize, noise, color jitter, or center crop is applied; transforms are never stacked. Dataset
+revisions, source paths, split roles, dimensions, byte sizes, and SHA-256 values are retained in the
+local provenance files.
