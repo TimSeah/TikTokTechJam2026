@@ -21,51 +21,21 @@
     "jitter_amount0.20",
     "crop_ratio0.80"
   ],
-  "final_model": "hybrid_augmented",
+  "final_model": "semantic_native_mixed",
   "models": {
-    "semantic_clean": {
-      "clean_auc": 0.9887549649999999,
-      "condition_weighted_robust_auc": 0.9177702889285714,
-      "family_balanced_robust_auc": 0.9223694270138889,
-      "condition_weighted_final_score": 0.9532626269642857,
-      "family_balanced_final_score": 0.9555621960069445,
+    "semantic_native_mixed": {
+      "clean_auc": 0.95781988,
+      "condition_weighted_robust_auc": 0.8966357017857144,
+      "family_balanced_robust_auc": 0.9003141539583334,
+      "condition_weighted_final_score": 0.9272277908928572,
+      "family_balanced_final_score": 0.9290670169791666,
       "family_auc": {
-        "blur": 0.864080015,
-        "crop": 0.9751776999999999,
-        "jitter": 0.98462957,
-        "jpeg": 0.97805778875,
-        "noise": 0.9199625983333334,
-        "resize": 0.8123088900000001
-      }
-    },
-    "hybrid_clean": {
-      "clean_auc": 0.9917602700000001,
-      "condition_weighted_robust_auc": 0.9109408546428571,
-      "family_balanced_robust_auc": 0.915119693125,
-      "condition_weighted_final_score": 0.9513505623214287,
-      "family_balanced_final_score": 0.9534399815625001,
-      "family_auc": {
-        "blur": 0.8474426300000001,
-        "crop": 0.97949074,
-        "jitter": 0.986045075,
-        "jpeg": 0.9811549087500001,
-        "noise": 0.927519015,
-        "resize": 0.7690657900000001
-      }
-    },
-    "hybrid_augmented": {
-      "clean_auc": 0.9884091449999999,
-      "condition_weighted_robust_auc": 0.9562109732142857,
-      "family_balanced_robust_auc": 0.9575979451388887,
-      "condition_weighted_final_score": 0.9723100591071427,
-      "family_balanced_final_score": 0.9730035450694443,
-      "family_auc": {
-        "blur": 0.9415121383333332,
-        "crop": 0.9737668450000001,
-        "jitter": 0.9831548800000001,
-        "jpeg": 0.9796727075,
-        "noise": 0.9518424549999999,
-        "resize": 0.915638645
+        "blur": 0.8771063633333335,
+        "crop": 0.933956575,
+        "jitter": 0.94527609,
+        "jpeg": 0.94319559625,
+        "noise": 0.8648650866666667,
+        "resize": 0.8374852125
       }
     }
   }

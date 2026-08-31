@@ -1,0 +1,82 @@
+{
+  "model": "semantic_native_mixed",
+  "training": {
+    "native_per_class": 4000,
+    "cifake_per_class": 4000,
+    "training_rows": 48000,
+    "sid_per_class": 4000,
+    "wildfake_per_class": 4000,
+    "training_domains": [
+      "cifake",
+      "sid",
+      "wildfake"
+    ],
+    "views_per_image": 2,
+    "augmentation": "clean_plus_deterministic_augmented"
+  },
+  "threshold": 0.7819586396217346,
+  "gates_passed": true,
+  "gate_failures": {},
+  "evaluations": {
+    "sid_calibration": {
+      "auc": 0.9939720000000001,
+      "accuracy": 0.969,
+      "f1": 0.9693978282329714,
+      "score_std": 0.4673735797405243,
+      "predicted_fake_rate": 0.513,
+      "real_score_median": 0.007253393530845642,
+      "fake_score_median": 0.9990286231040955,
+      "minimum_auc": 0.9,
+      "passed": true,
+      "failures": []
+    },
+    "cifake_clean": {
+      "auc": 0.95781988,
+      "accuracy": 0.8523,
+      "f1": 0.8345283441631189,
+      "score_std": 0.39058932662010193,
+      "predicted_fake_rate": 0.3926,
+      "real_score_median": 0.0894479900598526,
+      "fake_score_median": 0.9264327883720398,
+      "minimum_auc": 0.9,
+      "passed": true,
+      "failures": []
+    },
+    "sid_validation": {
+      "auc": 0.9919,
+      "accuracy": 0.9525,
+      "f1": 0.9528535980148883,
+      "score_std": 0.45625001192092896,
+      "predicted_fake_rate": 0.5075,
+      "real_score_median": 0.017828892916440964,
+      "fake_score_median": 0.9993047118186951,
+      "minimum_auc": 0.9,
+      "passed": true,
+      "failures": []
+    },
+    "wildfake_default": {
+      "auc": 0.902925,
+      "accuracy": 0.8375,
+      "f1": 0.8418491484184915,
+      "score_std": 0.4047691226005554,
+      "predicted_fake_rate": 0.5275,
+      "real_score_median": 0.16495172679424286,
+      "fake_score_median": 0.9890705347061157,
+      "minimum_auc": 0.7,
+      "passed": true,
+      "failures": []
+    },
+    "wildfake_laion_matched": {
+      "auc": 0.9127,
+      "accuracy": 0.82,
+      "f1": 0.8011049723756906,
+      "score_std": 0.42852783203125,
+      "predicted_fake_rate": 0.405,
+      "real_score_median": 0.007516147568821907,
+      "fake_score_median": 0.933312177658081,
+      "minimum_auc": 0.75,
+      "passed": true,
+      "failures": []
+    }
+  }
+}

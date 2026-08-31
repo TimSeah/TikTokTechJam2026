@@ -1,0 +1,61 @@
+{
+  "budget_seconds": 3600,
+  "elapsed_seconds": 547.063,
+  "status": "completed",
+  "stages": [
+    {
+      "name": "sid_train_clean",
+      "seconds": 107.313,
+      "status": "passed",
+      "returncode": 0
+    },
+    {
+      "name": "sid_train_augmented",
+      "seconds": 130.734,
+      "status": "passed",
+      "returncode": 0
+    },
+    {
+      "name": "wildfake_train_clean",
+      "seconds": 96.438,
+      "status": "passed",
+      "returncode": 0
+    },
+    {
+      "name": "wildfake_train_augmented",
+      "seconds": 96.75,
+      "status": "passed",
+      "returncode": 0
+    },
+    {
+      "name": "sid_calibration",
+      "seconds": 28.375,
+      "status": "passed",
+      "returncode": 0
+    },
+    {
+      "name": "sid_validation",
+      "seconds": 28.61,
+      "status": "passed",
+      "returncode": 0
+    },
+    {
+      "name": "wildfake_default",
+      "seconds": 26.562,
+      "status": "passed",
+      "returncode": 0
+    },
+    {
+      "name": "wildfake_matched",
+      "seconds": 26.437,
+      "status": "passed",
+      "returncode": 0
+    },
+    {
+      "name": "fit_and_gate",
+      "seconds": 5.813,
+      "status": "passed",
+      "returncode": 0
+    }
+  ]
+}
