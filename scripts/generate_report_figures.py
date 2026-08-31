@@ -33,6 +33,16 @@ def load_report_metrics() -> dict:
     return json.loads(path.read_text(encoding="utf-8"))
 
 
+def load_shift_audit() -> dict:
+    path = ROOT / "outputs" / "shift_audit.json"
+    return json.loads(path.read_text(encoding="utf-8"))
+
+
+def load_native_stress() -> dict:
+    path = ROOT / "outputs" / "native_stress.json"
+    return json.loads(path.read_text(encoding="utf-8"))
+
+
 def load_font(
     size: int, bold: bool = False
 ) -> ImageFont.FreeTypeFont | ImageFont.ImageFont:
@@ -783,8 +793,10 @@ def _standard_architecture_figure() -> None:
 
 def _standard_robustness_figure() -> None:
     rows = load_report_metrics()["submitted_hybrid"]["conditions"]
-    labels = [row["condition"] for row in rows]
-    values = [float(row["auc"]) for row in rows]
+    clean_auc = float(rows[0]["auc"])
+    transformed_rows = rows[1:]
+    labels = [row["condition"] for row in transformed_rows]
+    changes = [float(row["auc"]) - clean_auc for row in transformed_rows]
     colors_by_family = {
         "clean": NAVY,
         "jpeg": NAVY,
@@ -794,24 +806,19 @@ def _standard_robustness_figure() -> None:
         "jitter": TEAL,
         "crop": GREEN,
     }
-    colors = [colors_by_family[row["family"]] for row in rows]
+    colors = [colors_by_family[row["family"]] for row in transformed_rows]
     figure, axis = plt.subplots(figsize=(8.4, 6.1))
     positions = list(range(len(labels)))[::-1]
-    axis.barh(
-        positions,
-        [value - 0.84 for value in values],
-        left=0.84,
-        color=colors,
-        height=0.62,
-    )
+    axis.barh(positions, changes, color=colors, height=0.62)
     axis.set_yticks(positions, labels)
-    axis.set_xlim(0.84, 1.0)
-    axis.set_xlabel("ROC AUC (axis begins at 0.84)")
-    for position, value in zip(positions, values):
+    axis.set_xlim(-0.12, 0.005)
+    axis.axvline(0.0, color=INK, linewidth=0.9)
+    axis.set_xlabel(f"Change in ROC AUC from clean ({clean_auc:.3f})")
+    for position, change in zip(positions, changes):
         axis.text(
-            value + 0.002,
+            min(change + 0.002, -0.001),
             position,
-            f"{value:.3f}",
+            f"{change:+.3f}",
             va="center",
             fontsize=8,
             weight="bold",
@@ -891,72 +898,106 @@ def _standard_blind_transfer_figure() -> None:
     for spine in axis.spines.values():
         spine.set_visible(False)
     colorbar = figure.colorbar(image, ax=axis, fraction=0.025, pad=0.03)
-    colorbar.set_label("ROC AUC", fontsize=8)
+    colorbar.set_label("Probability ROC AUC", fontsize=8)
     colorbar.outline.set_visible(False)
     _save_plot(figure, "blind_transfer.png")
 
 
 def _standard_frequency_figure() -> None:
-    data = load_report_metrics()["frequency_diagnosis"]
-    labels = ["CIFAKE clean", "SID-Set", "COCO / DALL-E", "LAION / DALL-E"]
-    values = [
-        data["cifake_test_max_abs_standardized"],
-        *data["blind_max_abs_standardized"].values(),
+    audit = load_shift_audit()["historical_blind_models"]
+    rows = [
+        ("SID-Set", audit["sid_validation"]["hybrid_augmented"]),
+        ("COCO / DALL-E", audit["wildfake_coco_dalle"]["hybrid_augmented"]),
+        ("LAION / DALL-E", audit["wildfake_laion_dalle"]["hybrid_augmented"]),
     ]
     figure, (axis, detail_axis) = plt.subplots(
-        1, 2, figsize=(9.2, 3.8), gridspec_kw={"width_ratios": [1.35, 1]}
+        1, 2, figsize=(9.4, 3.8), gridspec_kw={"width_ratios": [1.2, 1]}
     )
-    positions = list(range(len(labels)))[::-1]
-    axis.barh(positions, values[::-1], color=[RED, RED, RED, NAVY], height=0.58)
-    axis.set_yticks(positions, labels[::-1])
+    positions = list(range(len(rows)))[::-1]
+    for position, (_, result) in zip(positions, rows):
+        summary = result["branches"]["absolute_standardized_frequency"]
+        axis.hlines(position, summary["p05"], summary["p95"], color=RED, linewidth=7)
+        axis.plot(summary["median"], position, "o", color=INK, markersize=5)
+        axis.plot(summary["maximum"], position, "|", color=RED, markersize=11)
+    axis.axvline(5.475487, color=NAVY, linestyle="--", linewidth=1.2)
+    axis.text(5.8, 2.25, "training p99.9 = 5.48", color=NAVY, fontsize=7)
+    axis.set_yticks(positions, [name for name, _ in rows])
     axis.set_xscale("log")
-    axis.set_xticks([10, 100, 1000])
-    axis.set_xticklabels(["10", "100", "1,000"])
+    axis.set_xlim(0.5, 700)
+    axis.set_xticks([1, 10, 100])
+    axis.set_xticklabels(["1", "10", "100"])
     axis.minorticks_off()
-    axis.set_xlabel("Maximum absolute standardized value (log scale)")
-    for position, value in zip(positions, values[::-1]):
-        axis.text(
-            value * 1.12,
-            position,
-            f"{value:.1f}",
-            va="center",
-            fontsize=8,
-            weight="bold",
-        )
+    axis.set_xlabel(
+        "Absolute standardized frequency value (log scale)\nbar p05-p95; dot median; tick maximum"
+    )
     _clean_axes(axis)
-    detail_axis.axis("off")
-    steps = [
-        (
-            "Training range",
-            f"99.9th percentile {data['training_p99_9_abs_standardized']:.2f}",
-        ),
-        ("Blind input", "feature magnitude about 500"),
-        ("Linear head", "SID logits 7.96 to 121.44"),
-        ("Output", "sigmoid rounds to 1.0"),
-    ]
-    for index, (title, detail) in enumerate(steps):
-        y = 0.83 - index * 0.22
-        detail_axis.text(
-            0.03, y, title, fontsize=9, weight="bold", transform=detail_axis.transAxes
-        )
-        detail_axis.text(
-            0.03,
-            y - 0.07,
-            detail,
-            fontsize=8,
-            color=MUTED,
-            transform=detail_axis.transAxes,
-        )
-        if index < len(steps) - 1:
-            detail_axis.annotate(
-                "",
-                xy=(0.08, y - 0.13),
-                xytext=(0.08, y - 0.08),
-                xycoords=detail_axis.transAxes,
-                arrowprops={"arrowstyle": "->", "color": "#84929C"},
-            )
+    width = 0.34
+    probability_auc = [result["probability_ranking"]["auc"] for _, result in rows]
+    margin_auc = [result["margin_ranking"]["auc"] for _, result in rows]
+    positions = list(range(len(rows)))
+    detail_axis.bar(
+        [position - width / 2 for position in positions],
+        probability_auc,
+        width,
+        color=RED,
+        label="Probability",
+    )
+    detail_axis.bar(
+        [position + width / 2 for position in positions],
+        margin_auc,
+        width,
+        color=NAVY,
+        label="Raw margin",
+    )
+    detail_axis.axhline(0.5, color=MUTED, linestyle="--", linewidth=0.9)
+    detail_axis.set_ylim(0.45, 0.82)
+    detail_axis.set_xticks(positions, ["SID", "COCO", "LAION"])
+    detail_axis.set_ylabel("ROC AUC")
+    detail_axis.legend(frameon=False, fontsize=7)
+    _clean_axes(detail_axis, grid_axis="y")
     figure.tight_layout()
     _save_plot(figure, "frequency_extrapolation.png")
+
+
+def _standard_native_stress_figure() -> None:
+    datasets = load_native_stress()["datasets"]
+    names = ["SID-Set", "COCO / DALL-E", "LAION / DALL-E"]
+    keys = ["sid_validation", "wildfake_coco_dalle", "wildfake_laion_dalle"]
+    clean = [
+        datasets[key]["conditions"]["clean"]["probability_ranking"]["auc"]
+        for key in keys
+    ]
+    individual = [
+        datasets[key]["summary"]["individual_transform"]["mean_auc"] for key in keys
+    ]
+    chains = [
+        datasets[key]["summary"]["platform_style_chain"]["mean_auc"] for key in keys
+    ]
+    positions = np.arange(len(names))
+    width = 0.24
+    figure, axis = plt.subplots(figsize=(8.2, 4.1))
+    for offset, values, label, color in (
+        (-width, clean, "Clean", NAVY),
+        (0.0, individual, "14 individual transforms", TEAL),
+        (width, chains, "3 ordered chains", ORANGE),
+    ):
+        axis.bar(positions + offset, values, width, label=label, color=color)
+        for position, value in zip(positions + offset, values):
+            axis.text(
+                position,
+                value + 0.008,
+                f"{value:.3f}",
+                ha="center",
+                fontsize=7.5,
+                color=color,
+            )
+    axis.set_xticks(positions, names)
+    axis.set_ylim(0.70, 1.02)
+    axis.set_ylabel("ROC AUC")
+    axis.legend(frameon=False, ncol=3, loc="lower center", bbox_to_anchor=(0.5, -0.24))
+    _clean_axes(axis, grid_axis="y")
+    figure.tight_layout()
+    _save_plot(figure, "native_stress.png")
 
 
 def _standard_progression_figure() -> None:
@@ -964,7 +1005,7 @@ def _standard_progression_figure() -> None:
         ("Semantic\nbaseline", "clean .989\nrobust .918", PALE_BLUE, NAVY),
         ("Add FFT", "clean .992\nrobust .911", PALE_ORANGE, ORANGE),
         ("Add\naugmentation", "robust .956\ncomposite .972", PALE_GREEN, TEAL),
-        ("Native test", "AUC\nabout .50", PALE_RED, RED),
+        ("Native test", "probability AUC\nabout .50", PALE_RED, RED),
         ("Branch\ndiagnosis", "frequency |z|\nabout 500", PALE_ORANGE, ORANGE),
         ("Remove FFT", "semantic\nmodel", PALE_BLUE, NAVY),
         ("Promote", "SID .992\nWildFake .903 / .913", PALE_GREEN, GREEN),
@@ -1023,7 +1064,9 @@ def main() -> None:
     _standard_ablation_figure()
     _standard_blind_transfer_figure()
     _standard_frequency_figure()
-    print(f"Generated 5 report figures in {OUTPUT_DIR}; progression figure is browser-rendered")
+    _standard_native_stress_figure()
+    _standard_progression_figure()
+    print(f"Generated 7 report figures in {OUTPUT_DIR}")
 
 
 if __name__ == "__main__":

@@ -17,9 +17,11 @@ from src.detector.data import ImageRecord
 from src.detector.freq_features import radial_fft_features
 from src.detector.transforms import (
     EVAL_TRANSFORMS,
+    TransformChain,
     TransformSpec,
     apply_training_transform,
     apply_transform,
+    apply_transform_chain,
     stable_seed,
 )
 
@@ -88,7 +90,7 @@ class FeatureDataset(Dataset):
         records: Sequence[ImageRecord],
         data_root: Path,
         preprocess: Callable[[Image.Image], torch.Tensor],
-        condition: str | TransformSpec,
+        condition: str | TransformSpec | TransformChain,
         seed: int,
         semantic_only: bool = False,
     ) -> None:
@@ -119,6 +121,11 @@ class FeatureDataset(Dataset):
         elif isinstance(self.condition, TransformSpec):
             transform_seed = stable_seed(self.seed, record.image_id, self.condition.key)
             transformed = apply_transform(image, self.condition, seed=transform_seed)
+            transform_key = self.condition.key
+        elif isinstance(self.condition, TransformChain):
+            transformed = apply_transform_chain(
+                image, self.condition, self.seed, record.image_id
+            )
             transform_key = self.condition.key
         else:
             raise ValueError(f"Unsupported condition: {self.condition}")

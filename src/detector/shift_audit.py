@@ -28,7 +28,12 @@ from sklearn.preprocessing import StandardScaler
 
 from src.detector.features import FeatureArrays, load_feature_cache
 from src.detector.freq_features import radial_fft_features
-from src.detector.model import combine_features, load_artifact, predict_margins, predict_scores
+from src.detector.model import (
+    combine_features,
+    load_artifact,
+    predict_margins,
+    predict_scores,
+)
 
 HISTORICAL_REVISION = "ed8b1ef5eee8258c34e0589990c76765e470ea05"
 HISTORICAL_ARTIFACT_PATH = "outputs/model.joblib"
@@ -59,6 +64,12 @@ PROMOTED_GATES = {
     "cifake_clean": "data/features/test-clean",
     "wildfake_coco_dalle": "data/features/wildfake-default-clean",
     "wildfake_laion_dalle": "data/features/wildfake-laion-matched-clean",
+}
+
+PROMOTED_MANIFESTS = {
+    "sid_validation": "data/blind-test/sid-validation/manifest.csv",
+    "wildfake_coco_dalle": "data/blind-test/wildfake-default/manifest.csv",
+    "wildfake_laion_dalle": "data/blind-test/wildfake-laion-matched/manifest.csv",
 }
 
 
@@ -116,8 +127,7 @@ def paired_bootstrap_auc_difference(
         ) - roc_auc_score(labels[sampled], second_scores[sampled])
     return {
         "difference": float(
-            roc_auc_score(labels, first_scores)
-            - roc_auc_score(labels, second_scores)
+            roc_auc_score(labels, first_scores) - roc_auc_score(labels, second_scores)
         ),
         "bootstrap_95_ci": percentile_interval(differences),
         "bootstrap_replicates": replicates,
@@ -259,8 +269,15 @@ def metadata_baseline(rows: list[dict[str, str]], seeds: int = 5) -> dict:
                 ]
             )
             model.fit(features[train_indices], labels[train_indices])
-            predictions[test_indices] = model.predict_proba(features[test_indices])[:, 1]
+            predictions[test_indices] = model.predict_proba(features[test_indices])[
+                :, 1
+            ]
         estimates.append(float(roc_auc_score(labels, predictions)))
+    source_label_counts: dict[str, dict[str, int]] = {}
+    for row in rows:
+        source = row.get("source") or "unspecified"
+        label = row["label"]
+        source_label_counts.setdefault(source, {"0": 0, "1": 0})[label] += 1
     return {
         "features": ["log_width", "log_height", "log_bytes", "log_aspect_ratio"],
         "protocol": "five-fold stratified out-of-fold logistic regression",
@@ -269,6 +286,11 @@ def metadata_baseline(rows: list[dict[str, str]], seeds: int = 5) -> dict:
         "mean_auc": float(np.mean(estimates)),
         "minimum_auc": min(estimates),
         "maximum_auc": max(estimates),
+        "source_label_counts": source_label_counts,
+        "source_classification_note": (
+            "When each source contains one class, source classification and label "
+            "classification are not separately identifiable."
+        ),
     }
 
 
@@ -289,6 +311,7 @@ def source_score_summary(
         selected = sources == source
         source_labels = arrays.labels[selected]
         source_scores = scores[selected]
+        source_predictions = source_scores >= threshold
         label_counts = {
             str(label): int(np.count_nonzero(source_labels == label))
             for label in (0, 1)
@@ -298,6 +321,9 @@ def source_score_summary(
             "label_counts": label_counts,
             "score": quantile_summary(source_scores),
             "predicted_fake_rate": float(np.mean(source_scores >= threshold)),
+            "predicted_real": int(np.count_nonzero(~source_predictions)),
+            "predicted_fake": int(np.count_nonzero(source_predictions)),
+            "errors": int(np.count_nonzero(source_predictions != source_labels)),
             "auc": (
                 float(roc_auc_score(source_labels, source_scores))
                 if len(np.unique(source_labels)) == 2
@@ -375,7 +401,9 @@ def paired_wildfake_holdout(root: Path) -> dict:
                     "evaluation_fake": int(
                         np.count_nonzero(held_out_arrays.labels == 1)
                     ),
-                    "fitting_rows_clean_plus_augmented": int(2 * np.count_nonzero(fitting)),
+                    "fitting_rows_clean_plus_augmented": int(
+                        2 * np.count_nonzero(fitting)
+                    ),
                 }
             )
             results.append(result)
@@ -481,9 +509,7 @@ def score_audit(
             arrays.labels, probabilities, threshold
         ),
         "calibration": reliability_diagnostics(arrays.labels, probabilities),
-        "subsample_sensitivity": subsample_auc_sensitivity(
-            arrays.labels, margins
-        ),
+        "subsample_sensitivity": subsample_auc_sensitivity(arrays.labels, margins),
     }
     if not semantic_only:
         result["branches"] = branch_diagnostics(model, arrays)
@@ -609,7 +635,9 @@ def hash_bands(value: int) -> list[tuple[int, int]]:
     return bands
 
 
-def build_near_hash_index(values: dict[int, set[int]]) -> dict[tuple[int, int], set[int]]:
+def build_near_hash_index(
+    values: dict[int, set[int]],
+) -> dict[tuple[int, int], set[int]]:
     index: dict[tuple[int, int], set[int]] = {}
     for value in values:
         for band in hash_bands(value):
@@ -638,9 +666,7 @@ def parse_args() -> argparse.Namespace:
         description="Audit blind-set ranking, calibration, metadata, and overlap"
     )
     parser.add_argument("--root", type=Path, default=Path("."))
-    parser.add_argument(
-        "--output", type=Path, default=Path("outputs/shift_audit.json")
-    )
+    parser.add_argument("--output", type=Path, default=Path("outputs/shift_audit.json"))
     return parser.parse_args()
 
 
@@ -654,9 +680,7 @@ def main() -> None:
     for dataset_index, (dataset_name, spec) in enumerate(DATASETS.items()):
         semantic_arrays = load_feature_cache(root / spec["feature_cache"])
         manifest_rows = read_csv_rows(root / spec["manifest"])
-        arrays = with_frequency_features(
-            semantic_arrays, root / "data/blind-test"
-        )
+        arrays = with_frequency_features(semantic_arrays, root / "data/blind-test")
         models = {}
         for model_index, (model_name, model) in enumerate(
             historical_artifact["models"].items()
@@ -669,17 +693,24 @@ def main() -> None:
                 manifest_rows=manifest_rows,
             )
         historical_results[dataset_name] = models
-        metadata_results[dataset_name] = metadata_baseline(
-            manifest_rows
-        )
+        metadata_results[dataset_name] = metadata_baseline(manifest_rows)
 
     promoted_model = promoted_artifact["models"][promoted_artifact["final_model"]]
     promoted_threshold = float(promoted_artifact["config"]["threshold"])
     promoted_results = {}
     for gate_name, cache_path in PROMOTED_GATES.items():
         arrays = load_feature_cache(root / cache_path)
+        manifest_rows = (
+            read_csv_rows(root / PROMOTED_MANIFESTS[gate_name])
+            if gate_name in PROMOTED_MANIFESTS
+            else None
+        )
         promoted_results[gate_name] = score_audit(
-            promoted_model, arrays, semantic_only=True, threshold=promoted_threshold
+            promoted_model,
+            arrays,
+            semantic_only=True,
+            threshold=promoted_threshold,
+            manifest_rows=manifest_rows,
         )
 
     payload = {

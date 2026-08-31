@@ -183,6 +183,26 @@
           "minimum": 0.8275,
           "median": 0.89365,
           "maximum": 0.9186000000000001
+        },
+        "sources": {
+          "unspecified": {
+            "count": 400,
+            "label_counts": {
+              "0": 200,
+              "1": 200
+            },
+            "score": {
+              "minimum": 1.0218474955081547e-07,
+              "p05": 0.005268283397890629,
+              "median": 0.9999785423278809,
+              "p95": 1.0,
+              "p99": 1.0,
+              "maximum": 1.0
+            },
+            "predicted_fake_rate": 0.865,
+            "auc": 0.8865625,
+            "auc_note": null
+          }
         }
       },
       "hybrid_clean": {
@@ -418,6 +438,26 @@
             "p95": 372.2834533691406,
             "p99": 428.86252441406253,
             "maximum": 594.2779541015625
+          }
+        },
+        "sources": {
+          "unspecified": {
+            "count": 400,
+            "label_counts": {
+              "0": 200,
+              "1": 200
+            },
+            "score": {
+              "minimum": 6.112609984149087e-12,
+              "p05": 1.0,
+              "median": 1.0,
+              "p95": 1.0,
+              "p99": 1.0,
+              "maximum": 1.0
+            },
+            "predicted_fake_rate": 0.9875,
+            "auc": 0.532475,
+            "auc_note": null
           }
         }
       },
@@ -655,6 +695,26 @@
             "p99": 358.05026092529306,
             "maximum": 507.9900207519531
           }
+        },
+        "sources": {
+          "unspecified": {
+            "count": 400,
+            "label_counts": {
+              "0": 200,
+              "1": 200
+            },
+            "score": {
+              "minimum": 0.9996517896652222,
+              "p05": 1.0,
+              "median": 1.0,
+              "p95": 1.0,
+              "p99": 1.0,
+              "maximum": 1.0
+            },
+            "predicted_fake_rate": 1.0,
+            "auc": 0.4975,
+            "auc_note": null
+          }
         }
       }
     },
@@ -831,6 +891,44 @@
           "minimum": 0.7288000000000001,
           "median": 0.7636000000000001,
           "maximum": 0.8122
+        },
+        "sources": {
+          "coco_val2017": {
+            "count": 200,
+            "label_counts": {
+              "0": 200,
+              "1": 0
+            },
+            "score": {
+              "minimum": 1.5320595991852315e-07,
+              "p05": 0.0005068181606475266,
+              "median": 0.8639364838600159,
+              "p95": 0.999998128414154,
+              "p99": 1.0,
+              "maximum": 1.0
+            },
+            "predicted_fake_rate": 0.605,
+            "auc": null,
+            "auc_note": "undefined because this source contains one class"
+          },
+          "dalle3_advanced": {
+            "count": 200,
+            "label_counts": {
+              "0": 0,
+              "1": 200
+            },
+            "score": {
+              "minimum": 1.7300727961355733e-07,
+              "p05": 0.04359550010412933,
+              "median": 0.9998632669448853,
+              "p95": 1.0,
+              "p99": 1.0,
+              "maximum": 1.0
+            },
+            "predicted_fake_rate": 0.89,
+            "auc": null,
+            "auc_note": "undefined because this source contains one class"
+          }
         }
       },
       "hybrid_clean": {
@@ -1066,6 +1164,44 @@
             "p95": 369.54087371826165,
             "p99": 445.2616275024417,
             "maximum": 582.7590942382812
+          }
+        },
+        "sources": {
+          "coco_val2017": {
+            "count": 200,
+            "label_counts": {
+              "0": 200,
+              "1": 0
+            },
+            "score": {
+              "minimum": 1.0,
+              "p05": 1.0,
+              "median": 1.0,
+              "p95": 1.0,
+              "p99": 1.0,
+              "maximum": 1.0
+            },
+            "predicted_fake_rate": 1.0,
+            "auc": null,
+            "auc_note": "undefined because this source contains one class"
+          },
+          "dalle3_advanced": {
+            "count": 200,
+            "label_counts": {
+              "0": 0,
+              "1": 200
+            },
+            "score": {
+              "minimum": 3.32376140499413e-12,
+              "p05": 0.9898364514112473,
+              "median": 1.0,
+              "p95": 1.0,
+              "p99": 1.0,
+              "maximum": 1.0
+            },
+            "predicted_fake_rate": 0.975,
+            "auc": null,
+            "auc_note": "undefined because this source contains one class"
           }
         }
       },
@@ -1303,6 +1439,44 @@
             "p99": 366.12001220703127,
             "maximum": 498.1376037597656
           }
+        },
+        "sources": {
+          "coco_val2017": {
+            "count": 200,
+            "label_counts": {
+              "0": 200,
+              "1": 0
+            },
+            "score": {
+              "minimum": 0.9999998807907104,
+              "p05": 1.0,
+              "median": 1.0,
+              "p95": 1.0,
+              "p99": 1.0,
+              "maximum": 1.0
+            },
+            "predicted_fake_rate": 1.0,
+            "auc": null,
+            "auc_note": "undefined because this source contains one class"
+          },
+          "dalle3_advanced": {
+            "count": 200,
+            "label_counts": {
+              "0": 0,
+              "1": 200
+            },
+            "score": {
+              "minimum": 1.0,
+              "p05": 1.0,
+              "median": 1.0,
+              "p95": 1.0,
+              "p99": 1.0,
+              "maximum": 1.0
+            },
+            "predicted_fake_rate": 1.0,
+            "auc": null,
+            "auc_note": "undefined because this source contains one class"
+          }
         }
       }
     },
@@ -1479,6 +1653,44 @@
           "minimum": 0.6844,
           "median": 0.7377,
           "maximum": 0.801
+        },
+        "sources": {
+          "dalle3_advanced": {
+            "count": 200,
+            "label_counts": {
+              "0": 0,
+              "1": 200
+            },
+            "score": {
+              "minimum": 3.45207418206428e-08,
+              "p05": 0.013443674473091964,
+              "median": 0.9994505643844604,
+              "p95": 1.0,
+              "p99": 1.0,
+              "maximum": 1.0
+            },
+            "predicted_fake_rate": 0.84,
+            "auc": null,
+            "auc_note": "undefined because this source contains one class"
+          },
+          "laion5b": {
+            "count": 200,
+            "label_counts": {
+              "0": 200,
+              "1": 0
+            },
+            "score": {
+              "minimum": 8.765271841681965e-11,
+              "p05": 1.0635364930067227e-06,
+              "median": 0.8221614956855774,
+              "p95": 0.9999950170516968,
+              "p99": 1.0,
+              "maximum": 1.0
+            },
+            "predicted_fake_rate": 0.585,
+            "auc": null,
+            "auc_note": "undefined because this source contains one class"
+          }
         }
       },
       "hybrid_clean": {
@@ -1715,6 +1927,44 @@
             "p99": 474.6399050903321,
             "maximum": 615.4218139648438
           }
+        },
+        "sources": {
+          "dalle3_advanced": {
+            "count": 200,
+            "label_counts": {
+              "0": 0,
+              "1": 200
+            },
+            "score": {
+              "minimum": 1.0610813917506616e-14,
+              "p05": 0.5758873999118811,
+              "median": 1.0,
+              "p95": 1.0,
+              "p99": 1.0,
+              "maximum": 1.0
+            },
+            "predicted_fake_rate": 0.95,
+            "auc": null,
+            "auc_note": "undefined because this source contains one class"
+          },
+          "laion5b": {
+            "count": 200,
+            "label_counts": {
+              "0": 200,
+              "1": 0
+            },
+            "score": {
+              "minimum": 4.775628931343685e-16,
+              "p05": 9.428380108147404e-05,
+              "median": 1.0,
+              "p95": 1.0,
+              "p99": 1.0,
+              "maximum": 1.0
+            },
+            "predicted_fake_rate": 0.905,
+            "auc": null,
+            "auc_note": "undefined because this source contains one class"
+          }
         }
       },
       "hybrid_augmented": {
@@ -1950,6 +2200,44 @@
             "p95": 310.0465515136718,
             "p99": 380.8539004516602,
             "maximum": 505.87060546875
+          }
+        },
+        "sources": {
+          "dalle3_advanced": {
+            "count": 200,
+            "label_counts": {
+              "0": 0,
+              "1": 200
+            },
+            "score": {
+              "minimum": 1.0,
+              "p05": 1.0,
+              "median": 1.0,
+              "p95": 1.0,
+              "p99": 1.0,
+              "maximum": 1.0
+            },
+            "predicted_fake_rate": 1.0,
+            "auc": null,
+            "auc_note": "undefined because this source contains one class"
+          },
+          "laion5b": {
+            "count": 200,
+            "label_counts": {
+              "0": 200,
+              "1": 0
+            },
+            "score": {
+              "minimum": 1.0,
+              "p05": 1.0,
+              "median": 1.0,
+              "p95": 1.0,
+              "p99": 1.0,
+              "maximum": 1.0
+            },
+            "predicted_fake_rate": 1.0,
+            "auc": null,
+            "auc_note": "undefined because this source contains one class"
           }
         }
       }
@@ -2907,26 +3195,290 @@
       "maximum_auc": 0.6438125
     }
   },
+  "paired_wildfake_group_holdout": {
+    "protocol": "For each of 18 pairs, exclude one real source and one fake generator, fit a semantic logistic probe on clean plus augmented views of all remaining WildFake groups, and evaluate clean held-out images.",
+    "scope": "Within the WildFake-Sample ecosystem; this sensitivity analysis is not an independent post-promotion test of the deployed model.",
+    "pairs": [
+      {
+        "auc": 0.9765843179377014,
+        "bootstrap_95_ci": [
+          0.9689808290359405,
+          0.9834734367706852
+        ],
+        "bootstrap_replicates": 1000,
+        "held_out_real_source": "afhq",
+        "held_out_fake_generator": "ADM",
+        "evaluation_real": 1337,
+        "evaluation_fake": 665,
+        "fitting_rows_clean_plus_augmented": 11996
+      },
+      {
+        "auc": 0.7021132184998716,
+        "bootstrap_95_ci": [
+          0.6742516940354325,
+          0.7300256477522633
+        ],
+        "bootstrap_replicates": 1000,
+        "held_out_real_source": "afhq",
+        "held_out_fake_generator": "DDPM",
+        "evaluation_real": 1337,
+        "evaluation_fake": 670,
+        "fitting_rows_clean_plus_augmented": 11986
+      },
+      {
+        "auc": 0.9410401607060946,
+        "bootstrap_95_ci": [
+          0.9260385902514308,
+          0.9544987594537981
+        ],
+        "bootstrap_replicates": 1000,
+        "held_out_real_source": "afhq",
+        "held_out_fake_generator": "GALIP",
+        "evaluation_real": 1337,
+        "evaluation_fake": 662,
+        "fitting_rows_clean_plus_augmented": 12002
+      },
+      {
+        "auc": 0.9801867733687516,
+        "bootstrap_95_ci": [
+          0.9738084337578387,
+          0.9859071969125264
+        ],
+        "bootstrap_replicates": 1000,
+        "held_out_real_source": "afhq",
+        "held_out_fake_generator": "GigaGAN",
+        "evaluation_real": 1337,
+        "evaluation_fake": 669,
+        "fitting_rows_clean_plus_augmented": 11988
+      },
+      {
+        "auc": 0.9884769657056288,
+        "bootstrap_95_ci": [
+          0.9836008977560584,
+          0.9930175245212098
+        ],
+        "bootstrap_replicates": 1000,
+        "held_out_real_source": "afhq",
+        "held_out_fake_generator": "VQGAN",
+        "evaluation_real": 1337,
+        "evaluation_fake": 667,
+        "fitting_rows_clean_plus_augmented": 11992
+      },
+      {
+        "auc": 0.889127238923545,
+        "bootstrap_95_ci": [
+          0.873057618535534,
+          0.9039448675064113
+        ],
+        "bootstrap_replicates": 1000,
+        "held_out_real_source": "afhq",
+        "held_out_fake_generator": "VQVAE",
+        "evaluation_real": 1337,
+        "evaluation_fake": 667,
+        "fitting_rows_clean_plus_augmented": 11992
+      },
+      {
+        "auc": 0.8563466832629673,
+        "bootstrap_95_ci": [
+          0.8353450740946325,
+          0.876251731117503
+        ],
+        "bootstrap_replicates": 1000,
+        "held_out_real_source": "celebahq",
+        "held_out_fake_generator": "ADM",
+        "evaluation_real": 1341,
+        "evaluation_fake": 665,
+        "fitting_rows_clean_plus_augmented": 11988
+      },
+      {
+        "auc": 0.919495364341603,
+        "bootstrap_95_ci": [
+          0.9060246029361025,
+          0.9330986566051175
+        ],
+        "bootstrap_replicates": 1000,
+        "held_out_real_source": "celebahq",
+        "held_out_fake_generator": "DDPM",
+        "evaluation_real": 1341,
+        "evaluation_fake": 670,
+        "fitting_rows_clean_plus_augmented": 11978
+      },
+      {
+        "auc": 0.9545183172588432,
+        "bootstrap_95_ci": [
+          0.9421926640848355,
+          0.9652593321032463
+        ],
+        "bootstrap_replicates": 1000,
+        "held_out_real_source": "celebahq",
+        "held_out_fake_generator": "GALIP",
+        "evaluation_real": 1341,
+        "evaluation_fake": 662,
+        "fitting_rows_clean_plus_augmented": 11994
+      },
+      {
+        "auc": 0.9433492842166511,
+        "bootstrap_95_ci": [
+          0.9324363051467515,
+          0.9528345979229298
+        ],
+        "bootstrap_replicates": 1000,
+        "held_out_real_source": "celebahq",
+        "held_out_fake_generator": "GigaGAN",
+        "evaluation_real": 1341,
+        "evaluation_fake": 669,
+        "fitting_rows_clean_plus_augmented": 11980
+      },
+      {
+        "auc": 0.983845884663932,
+        "bootstrap_95_ci": [
+          0.9781887579700085,
+          0.9887888550132092
+        ],
+        "bootstrap_replicates": 1000,
+        "held_out_real_source": "celebahq",
+        "held_out_fake_generator": "VQGAN",
+        "evaluation_real": 1341,
+        "evaluation_fake": 667,
+        "fitting_rows_clean_plus_augmented": 11984
+      },
+      {
+        "auc": 0.8876959730425615,
+        "bootstrap_95_ci": [
+          0.8724418551350722,
+          0.9026605824604476
+        ],
+        "bootstrap_replicates": 1000,
+        "held_out_real_source": "celebahq",
+        "held_out_fake_generator": "VQVAE",
+        "evaluation_real": 1341,
+        "evaluation_fake": 667,
+        "fitting_rows_clean_plus_augmented": 11984
+      },
+      {
+        "auc": 0.6690079965420359,
+        "bootstrap_95_ci": [
+          0.6437760911355545,
+          0.6954971676543855
+        ],
+        "bootstrap_replicates": 1000,
+        "held_out_real_source": "church",
+        "held_out_fake_generator": "ADM",
+        "evaluation_real": 1322,
+        "evaluation_fake": 665,
+        "fitting_rows_clean_plus_augmented": 12026
+      },
+      {
+        "auc": 0.7196344299681622,
+        "bootstrap_95_ci": [
+          0.6944892124099623,
+          0.7436152539119832
+        ],
+        "bootstrap_replicates": 1000,
+        "held_out_real_source": "church",
+        "held_out_fake_generator": "DDPM",
+        "evaluation_real": 1322,
+        "evaluation_fake": 670,
+        "fitting_rows_clean_plus_augmented": 12016
+      },
+      {
+        "auc": 0.8815387744468465,
+        "bootstrap_95_ci": [
+          0.8682959422462533,
+          0.8963791929284111
+        ],
+        "bootstrap_replicates": 1000,
+        "held_out_real_source": "church",
+        "held_out_fake_generator": "GALIP",
+        "evaluation_real": 1322,
+        "evaluation_fake": 662,
+        "fitting_rows_clean_plus_augmented": 12032
+      },
+      {
+        "auc": 0.7151403521864097,
+        "bootstrap_95_ci": [
+          0.6910142319581917,
+          0.7385976144764127
+        ],
+        "bootstrap_replicates": 1000,
+        "held_out_real_source": "church",
+        "held_out_fake_generator": "GigaGAN",
+        "evaluation_real": 1322,
+        "evaluation_fake": 669,
+        "fitting_rows_clean_plus_augmented": 12018
+      },
+      {
+        "auc": 0.9468310474112415,
+        "bootstrap_95_ci": [
+          0.9376430071651014,
+          0.9558291296862915
+        ],
+        "bootstrap_replicates": 1000,
+        "held_out_real_source": "church",
+        "held_out_fake_generator": "VQGAN",
+        "evaluation_real": 1322,
+        "evaluation_fake": 667,
+        "fitting_rows_clean_plus_augmented": 12022
+      },
+      {
+        "auc": 0.6971355472037053,
+        "bootstrap_95_ci": [
+          0.6730151943695324,
+          0.7199086727438097
+        ],
+        "bootstrap_replicates": 1000,
+        "held_out_real_source": "church",
+        "held_out_fake_generator": "VQVAE",
+        "evaluation_real": 1322,
+        "evaluation_fake": 667,
+        "fitting_rows_clean_plus_augmented": 12022
+      }
+    ],
+    "summary": {
+      "pair_count": 18,
+      "minimum_auc": 0.6690079965420359,
+      "median_auc": 0.9043113016325739,
+      "maximum_auc": 0.9884769657056288
+    }
+  },
   "exact_duplicate_audit": {
-    "training_unique_sha256": 16000,
+    "method": "Exact SHA-256 plus 64-bit horizontal difference hash. The five-band candidate index exhaustively finds every Hamming-distance <= 4 match; difference hashes are a screening tool, not semantic duplicate proof.",
+    "training_images": 116000,
+    "training_unique_sha256": 115080,
+    "training_unique_difference_hashes": 115072,
     "evaluations": {
       "sid_validation": {
         "rows": 400,
         "unique_sha256": 400,
         "within_evaluation_duplicates": 0,
-        "training_hash_overlaps": 0
+        "training_sha256_overlaps": 0,
+        "near_difference_hash_matches_hamming_le_4": 5,
+        "near_matches_with_opposite_training_label": 0,
+        "matched_training_sources": [
+          "cifake",
+          "sid"
+        ]
       },
       "wildfake_coco_dalle": {
         "rows": 400,
         "unique_sha256": 400,
         "within_evaluation_duplicates": 0,
-        "training_hash_overlaps": 0
+        "training_sha256_overlaps": 0,
+        "near_difference_hash_matches_hamming_le_4": 0,
+        "near_matches_with_opposite_training_label": 0,
+        "matched_training_sources": []
       },
       "wildfake_laion_dalle": {
         "rows": 400,
         "unique_sha256": 395,
         "within_evaluation_duplicates": 5,
-        "training_hash_overlaps": 0
+        "training_sha256_overlaps": 0,
+        "near_difference_hash_matches_hamming_le_4": 2,
+        "near_matches_with_opposite_training_label": 1,
+        "matched_training_sources": [
+          "cifake",
+          "sid"
+        ]
       }
     }
   },

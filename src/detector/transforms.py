@@ -20,6 +20,16 @@ class TransformSpec:
         return f"{self.family}_{self.severity}"
 
 
+@dataclass(frozen=True)
+class TransformChain:
+    name: str
+    steps: tuple[TransformSpec, ...]
+
+    @property
+    def key(self) -> str:
+        return f"chain_{self.name}"
+
+
 EVAL_TRANSFORMS = (
     TransformSpec("jpeg", "q90", 90),
     TransformSpec("jpeg", "q70", 70),
@@ -44,6 +54,37 @@ REPRESENTATIVE_TRANSFORMS = (
     EVAL_TRANSFORMS[10],
     EVAL_TRANSFORMS[12],
     EVAL_TRANSFORMS[13],
+)
+
+PLATFORM_STYLE_CHAINS = (
+    TransformChain(
+        "moderate_reupload",
+        (
+            TransformSpec("resize", "scale0.5", 0.5),
+            TransformSpec("jitter", "amount0.20", 0.20),
+            TransformSpec("sharpen", "factor1.4", 1.4),
+            TransformSpec("jpeg", "q70", 70),
+        ),
+    ),
+    TransformChain(
+        "heavy_reupload",
+        (
+            TransformSpec("crop", "ratio0.80", 0.80),
+            TransformSpec("resize", "scale0.25", 0.25),
+            TransformSpec("blur", "sigma0.5", 0.5),
+            TransformSpec("sharpen", "factor1.6", 1.6),
+            TransformSpec("jpeg", "q50", 50),
+        ),
+    ),
+    TransformChain(
+        "noisy_reupload",
+        (
+            TransformSpec("resize", "scale0.5", 0.5),
+            TransformSpec("noise", "sigma0.02", 0.02),
+            TransformSpec("sharpen", "factor1.3", 1.3),
+            TransformSpec("jpeg", "q70", 70),
+        ),
+    ),
 )
 
 
@@ -111,9 +152,21 @@ def apply_transform(
         transformed = _jitter(image, spec.value, seed)
     elif spec.family == "crop":
         transformed = _center_crop(image, spec.value)
+    elif spec.family == "sharpen":
+        transformed = ImageEnhance.Sharpness(image).enhance(spec.value)
     else:
         raise ValueError(f"Unknown transform family: {spec.family}")
     return transformed.convert("RGB")
+
+
+def apply_transform_chain(
+    image: Image.Image, chain: TransformChain, seed: int, image_id: str
+) -> Image.Image:
+    transformed = image.convert("RGB")
+    for index, spec in enumerate(chain.steps):
+        step_seed = stable_seed(seed, image_id, f"{chain.key}:{index}:{spec.key}")
+        transformed = apply_transform(transformed, spec, seed=step_seed)
+    return transformed
 
 
 def choose_training_transform(global_seed: int, image_id: str) -> TransformSpec:

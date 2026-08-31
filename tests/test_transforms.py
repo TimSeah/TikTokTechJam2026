@@ -4,6 +4,8 @@ from PIL import Image
 
 from src.detector.transforms import (
     EVAL_TRANSFORMS,
+    PLATFORM_STYLE_CHAINS,
+    apply_transform_chain,
     apply_training_transform,
     apply_transform,
 )
@@ -38,3 +40,15 @@ def test_training_transform_is_deterministic(sample_image: Image.Image) -> None:
     second_image, second_spec = apply_training_transform(sample_image, 2026, "image-1")
     assert first_spec == second_spec
     np.testing.assert_array_equal(np.asarray(first_image), np.asarray(second_image))
+
+
+@pytest.mark.parametrize("chain", PLATFORM_STYLE_CHAINS, ids=lambda chain: chain.key)
+def test_transform_chain_is_deterministic_and_preserves_contract(
+    sample_image: Image.Image, chain
+) -> None:
+    first = apply_transform_chain(sample_image, chain, seed=2026, image_id="image-1")
+    second = apply_transform_chain(sample_image, chain, seed=2026, image_id="image-1")
+
+    assert first.mode == "RGB"
+    assert first.size == sample_image.size
+    np.testing.assert_array_equal(np.asarray(first), np.asarray(second))
