@@ -36,7 +36,7 @@ class Settings:
         )
         return cls(
             model_artifact_path=_path_from_env(
-                "MODEL_ARTIFACT_PATH", "../outputs/development-model.joblib"
+                "MODEL_ARTIFACT_PATH", "../outputs/model.joblib"
             ),
             model_device=os.getenv("MODEL_DEVICE", "auto").strip().lower(),
             challenge_dataset_path=_path_from_env(
