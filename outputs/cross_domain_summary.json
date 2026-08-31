@@ -1,0 +1,105 @@
+{
+  "schema_version": 1,
+  "protocol": {
+    "model_artifact": "outputs/model.joblib",
+    "model_sha256": "e9bc59e42469c9f7001d7f23f6cbfbdac599e6968148329ef956faefc3427b5e",
+    "model_frozen_before_sampling": true,
+    "threshold": 0.5,
+    "sample_per_class": 200,
+    "bootstrap_replicates": 5000
+  },
+  "datasets": {
+    "sid_validation": {
+      "source": "saberzl/SID_Set",
+      "revision": "dc03ead57929879319ce30a82bfcfb8d317b10bd",
+      "configuration": "default",
+      "split": "validation",
+      "sampling_seed": 2028,
+      "count": 400,
+      "models": {
+        "semantic_clean": {
+          "auc": 0.886975,
+          "balanced_accuracy_at_0_5": 0.6375
+        },
+        "hybrid_clean": {
+          "auc": 0.532475,
+          "balanced_accuracy_at_0_5": 0.5075
+        },
+        "hybrid_augmented": {
+          "auc": 0.4975,
+          "auc_bootstrap_95_ci": [0.4925, 0.5],
+          "balanced_accuracy_at_0_5": 0.5,
+          "predicted_fake_rate": 1.0
+        }
+      }
+    },
+    "wildfake_coco_dalle": {
+      "source": "techjam-aigc/wildfake-eval-subset",
+      "revision": "a24ae914e4fe8ae1956c671b4fcd902f5bca1a0d",
+      "configuration": "default",
+      "split": "validation",
+      "real_source": "coco_val2017",
+      "fake_source": "dalle3_advanced",
+      "sampling_seed": 2026,
+      "count": 400,
+      "models": {
+        "semantic_clean": {
+          "auc": 0.767975,
+          "balanced_accuracy_at_0_5": 0.64
+        },
+        "hybrid_clean": {
+          "auc": 0.4275,
+          "balanced_accuracy_at_0_5": 0.4875
+        },
+        "hybrid_augmented": {
+          "auc": 0.5025,
+          "auc_bootstrap_95_ci": [0.5, 0.5075],
+          "balanced_accuracy_at_0_5": 0.5,
+          "predicted_fake_rate": 1.0
+        }
+      }
+    },
+    "wildfake_laion_dalle": {
+      "source": "techjam-aigc/wildfake-eval-subset",
+      "revision": "a24ae914e4fe8ae1956c671b4fcd902f5bca1a0d",
+      "configuration": "laion_matched",
+      "split": "validation",
+      "real_source": "laion5b",
+      "fake_source": "dalle3_advanced",
+      "sampling_seed": 2027,
+      "count": 400,
+      "models": {
+        "semantic_clean": {
+          "auc": 0.7406,
+          "balanced_accuracy_at_0_5": 0.6275
+        },
+        "hybrid_clean": {
+          "auc": 0.5234875,
+          "balanced_accuracy_at_0_5": 0.5225
+        },
+        "hybrid_augmented": {
+          "auc": 0.5,
+          "auc_bootstrap_95_ci": [0.5, 0.5],
+          "balanced_accuracy_at_0_5": 0.5,
+          "predicted_fake_rate": 1.0
+        }
+      }
+    }
+  },
+  "diagnosis": {
+    "maximum_absolute_standardized_frequency_feature_range": [
+      498.1376037597656,
+      507.9900207519531
+    ],
+    "finding": "The frequency branch drives extreme positive logits outside the CIFAKE distribution; the semantic-only probe retains ranking information but is not calibrated."
+  },
+  "preliminary_remediation": {
+    "model": "semantic_native_mixed",
+    "status": "not_promoted",
+    "training_rows": 2000,
+    "cifake_clean_auc": 0.9644602,
+    "cifake_clean_accuracy": 0.9008,
+    "cifake_clean_f1": 0.9005214600882471,
+    "remaining_work": "Native holdout, WildFake, saturation, and calibration promotion gates have not produced a final recorded result."
+  }
+}
