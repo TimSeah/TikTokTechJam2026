@@ -47,6 +47,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--shard-size", type=int, default=10_000)
     parser.add_argument("--limit", type=int)
     parser.add_argument("--seed", type=int, default=2026)
+    parser.add_argument("--semantic-only", action="store_true")
     return parser.parse_args()
 
 
@@ -75,6 +76,8 @@ def main() -> None:
         "seed": args.seed,
         "shard_size": args.shard_size,
     }
+    if args.semantic_only:
+        metadata["feature_mode"] = "semantic"
     metadata_path = args.output_dir / "metadata.json"
     if metadata_path.exists():
         existing = read_cache_metadata(args.output_dir)
@@ -98,7 +101,12 @@ def main() -> None:
         start = shard_index * args.shard_size
         end = min(start + args.shard_size, len(records))
         dataset = FeatureDataset(
-            records[start:end], args.data_root, preprocess, condition, args.seed
+            records[start:end],
+            args.data_root,
+            preprocess,
+            condition,
+            args.seed,
+            semantic_only=args.semantic_only,
         )
         loader = create_loader(dataset, args.batch_size, args.workers, device)
         arrays = encode_loader(model, loader, device)

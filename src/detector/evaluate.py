@@ -15,6 +15,7 @@ from src.detector.model import (
     calculate_metrics,
     load_artifact,
     predict_scores,
+    resolve_feature_mode,
 )
 from src.detector.transforms import EVAL_TRANSFORMS
 
@@ -24,12 +25,16 @@ def condition_family(condition: str) -> str:
 
 
 def evaluate_models(
-    models: dict, arrays: FeatureArrays, threshold: float
+    models: dict,
+    arrays: FeatureArrays,
+    threshold: float,
+    semantic_models: set[str] | None = None,
 ) -> dict[str, BinaryMetrics]:
+    semantic_models = {"semantic_clean"} if semantic_models is None else semantic_models
     return {
         name: calculate_metrics(
             arrays.labels,
-            predict_scores(model, arrays, semantic_only=name == "semantic_clean"),
+            predict_scores(model, arrays, semantic_only=name in semantic_models),
             threshold,
         )
         for name, model in models.items()
@@ -104,11 +109,14 @@ def main() -> None:
     artifact = load_artifact(args.model)
     models = artifact["models"]
     threshold = artifact["config"]["threshold"]
+    semantic_models = {"semantic_clean"}
+    if resolve_feature_mode(artifact["config"]) == "semantic":
+        semantic_models.add(artifact["final_model"])
     results: dict[str, dict[str, BinaryMetrics]] = {}
     counts: dict[str, int] = {}
     for condition in args.conditions:
         arrays = load_feature_cache(args.features_root / f"test-{condition}")
-        results[condition] = evaluate_models(models, arrays, threshold)
+        results[condition] = evaluate_models(models, arrays, threshold, semantic_models)
         counts[condition] = len(arrays)
         print(f"scored condition={condition} rows={len(arrays)}")
 

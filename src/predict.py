@@ -22,7 +22,7 @@ from src.detector.features import (
     load_backbone,
     resolve_device,
 )
-from src.detector.model import load_artifact, predict_scores
+from src.detector.model import load_artifact, predict_scores, resolve_feature_mode
 
 
 def discover_images(input_dir: Path) -> tuple[list[ImageRecord], list[str]]:
@@ -55,12 +55,18 @@ def discover_images(input_dir: Path) -> tuple[list[ImageRecord], list[str]]:
 
 
 def validate_artifact_config(config: dict) -> None:
+    feature_mode = resolve_feature_mode(config)
     expected = {
         "model_name": MODEL_NAME,
         "pretrained_checkpoint": PRETRAINED_CHECKPOINT,
-        "fft_bins": FFT_BINS,
-        "fft_image_size": FFT_IMAGE_SIZE,
     }
+    if feature_mode == "hybrid":
+        expected.update(
+            {
+                "fft_bins": FFT_BINS,
+                "fft_image_size": FFT_IMAGE_SIZE,
+            }
+        )
     mismatches = {
         key: (config.get(key), value)
         for key, value in expected.items()
@@ -106,6 +112,7 @@ def main() -> int:
     artifact = load_artifact(args.model)
     config = artifact["config"]
     validate_artifact_config(config)
+    semantic_only = resolve_feature_mode(config) == "semantic"
     records, skipped = discover_images(args.input_dir)
     for message in skipped:
         print(f"skip {message}", file=sys.stderr)
@@ -117,19 +124,27 @@ def main() -> int:
     device = resolve_device(args.device)
     model, preprocess = load_backbone(device)
     dataset = FeatureDataset(
-        records, args.input_dir, preprocess, "clean", config["seed"]
+        records,
+        args.input_dir,
+        preprocess,
+        "clean",
+        config["seed"],
+        semantic_only=semantic_only,
     )
     loader = create_loader(dataset, args.batch_size, args.workers, device)
     arrays = encode_loader(model, loader, device)
-    expected_dimension = config["semantic_dimension"] + config["frequency_dimension"]
-    actual_dimension = arrays.semantic.shape[1] + arrays.frequency.shape[1]
+    expected_dimension = config["semantic_dimension"]
+    actual_dimension = arrays.semantic.shape[1]
+    if not semantic_only:
+        expected_dimension += config["frequency_dimension"]
+        actual_dimension += arrays.frequency.shape[1]
     if actual_dimension != expected_dimension:
         raise ValueError(
             f"Feature dimension mismatch: expected {expected_dimension}, got {actual_dimension}"
         )
 
     final_model = artifact["models"][artifact["final_model"]]
-    scores = predict_scores(final_model, arrays, semantic_only=False)
+    scores = predict_scores(final_model, arrays, semantic_only=semantic_only)
     threshold = config["threshold"] if args.include_label else None
     write_predictions(records, scores, args.out, threshold)
     print(f"predicted={len(records)} skipped={len(skipped)} device={device}")

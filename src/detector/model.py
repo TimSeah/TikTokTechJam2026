@@ -17,6 +17,13 @@ FINAL_MODEL_NAME = "hybrid_augmented"
 MODEL_NAMES = ("semantic_clean", "hybrid_clean", FINAL_MODEL_NAME)
 
 
+def resolve_feature_mode(config: dict) -> str:
+    mode = config.get("final_feature_mode", "hybrid")
+    if mode not in {"semantic", "hybrid"}:
+        raise ValueError(f"Unsupported final feature mode: {mode}")
+    return mode
+
+
 @dataclass(frozen=True)
 class BinaryMetrics:
     auc: float

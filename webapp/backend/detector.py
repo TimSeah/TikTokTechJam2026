@@ -14,7 +14,6 @@ from PIL import Image, ImageOps
 
 from .config import Settings
 
-
 ARTIFACT_SCHEMA_VERSION = 1
 
 
@@ -63,10 +62,34 @@ def _radial_fft_features(
     edges = np.linspace(0.0, 1.0, bins + 1)
     features = np.empty(bins, dtype=np.float32)
     for index in range(bins):
-        upper_bound = radius <= edges[index + 1] if index == bins - 1 else radius < edges[index + 1]
+        upper_bound = (
+            radius <= edges[index + 1]
+            if index == bins - 1
+            else radius < edges[index + 1]
+        )
         mask = (radius >= edges[index]) & upper_bound
         features[index] = float(spectrum[mask].mean()) if mask.any() else 0.0
     return features
+
+
+def _resolve_feature_mode(config: dict) -> str:
+    mode = config.get("final_feature_mode", "hybrid")
+    if mode not in {"semantic", "hybrid"}:
+        raise ValueError(f"Unsupported final feature mode: {mode}")
+    return mode
+
+
+def _classifier_features(
+    semantic_features: np.ndarray, image: Image.Image, config: dict
+) -> np.ndarray:
+    if _resolve_feature_mode(config) == "semantic":
+        return semantic_features
+    frequency = _radial_fft_features(
+        image,
+        bins=int(config["fft_bins"]),
+        image_size=int(config["fft_image_size"]),
+    )
+    return np.concatenate((semantic_features, frequency.reshape(1, -1)), axis=1)
 
 
 @dataclass(frozen=True)
@@ -85,6 +108,7 @@ class DetectorService:
 
         artifact = _load_artifact(settings.model_artifact_path)
         self.config = artifact["config"]
+        self.feature_mode = _resolve_feature_mode(self.config)
         self.device = _resolve_device(settings.model_device)
         self.backbone, _, self.preprocess = open_clip.create_model_and_transforms(
             str(self.config["model_name"]),
@@ -103,11 +127,6 @@ class DetectorService:
         with self._inference_lock:
             started_at = time.perf_counter()
             semantic_input = self.preprocess(image).unsqueeze(0).to(self.device)
-            frequency = _radial_fft_features(
-                image,
-                bins=int(self.config["fft_bins"]),
-                image_size=int(self.config["fft_image_size"]),
-            )
 
             with torch.inference_mode():
                 if self.device.type == "cuda":
@@ -123,20 +142,20 @@ class DetectorService:
             semantic_features = (
                 semantic.cpu().numpy().astype(np.float16).astype(np.float32)
             )
-            combined_features = np.concatenate(
-                (semantic_features, frequency.reshape(1, -1)), axis=1
+            classifier_features = _classifier_features(
+                semantic_features, image, self.config
             )
-            expected_dimension = int(self.config["semantic_dimension"]) + int(
-                self.config["frequency_dimension"]
-            )
-            actual_dimension = combined_features.shape[1]
+            expected_dimension = int(self.config["semantic_dimension"])
+            if self.feature_mode == "hybrid":
+                expected_dimension += int(self.config["frequency_dimension"])
+            actual_dimension = classifier_features.shape[1]
             if actual_dimension != expected_dimension:
                 raise ValueError(
                     "Feature dimension mismatch: "
                     f"expected {expected_dimension}, got {actual_dimension}"
                 )
 
-            probabilities = self.classifier.predict_proba(combined_features)[:, 1]
+            probabilities = self.classifier.predict_proba(classifier_features)[:, 1]
             if not np.isfinite(probabilities).all():
                 raise ValueError("Model produced non-finite predictions")
             fake_probability = float(probabilities[0])

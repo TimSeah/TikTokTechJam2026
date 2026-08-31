@@ -9,7 +9,7 @@ import numpy as np
 from PIL import Image
 
 from src.detector.features import load_feature_cache, parse_condition
-from src.detector.model import load_artifact, predict_scores
+from src.detector.model import load_artifact, predict_scores, resolve_feature_mode
 from src.detector.transforms import TransformSpec, apply_transform, stable_seed
 
 
@@ -64,7 +64,8 @@ def main() -> None:
     artifact = load_artifact(args.model)
     arrays = load_feature_cache(args.cache)
     final_model = artifact["models"][artifact["final_model"]]
-    scores = predict_scores(final_model, arrays, semantic_only=False)
+    semantic_only = resolve_feature_mode(artifact["config"]) == "semantic"
+    scores = predict_scores(final_model, arrays, semantic_only=semantic_only)
     threshold = artifact["config"]["threshold"]
     examples = select_errors(arrays.labels, scores, args.per_type, threshold)
     if len(examples) != 2 * args.per_type:

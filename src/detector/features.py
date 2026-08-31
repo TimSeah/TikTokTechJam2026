@@ -90,12 +90,14 @@ class FeatureDataset(Dataset):
         preprocess: Callable[[Image.Image], torch.Tensor],
         condition: str | TransformSpec,
         seed: int,
+        semantic_only: bool = False,
     ) -> None:
         self.records = records
         self.data_root = data_root
         self.preprocess = preprocess
         self.condition = condition
         self.seed = seed
+        self.semantic_only = semantic_only
 
     def __len__(self) -> int:
         return len(self.records)
@@ -122,8 +124,12 @@ class FeatureDataset(Dataset):
             raise ValueError(f"Unsupported condition: {self.condition}")
 
         semantic_input = self.preprocess(transformed)
-        frequency = radial_fft_features(
-            transformed, bins=FFT_BINS, image_size=FFT_IMAGE_SIZE
+        frequency = (
+            np.empty(0, dtype=np.float32)
+            if self.semantic_only
+            else radial_fft_features(
+                transformed, bins=FFT_BINS, image_size=FFT_IMAGE_SIZE
+            )
         )
         return (
             semantic_input,
