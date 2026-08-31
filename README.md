@@ -10,40 +10,46 @@
 [![License: MIT](https://img.shields.io/badge/license-MIT-171918.svg)](LICENSE)
 [![Live demo](https://img.shields.io/badge/live_demo-play-d8ff3e.svg)](https://real-vs-ai.pages.dev)
 
-Real or Fake detects AI-generated images after common changes such as JPEG compression, blur,
-resizing, noise, color jitter, and cropping. For the final model, I used a scaled logistic-regression
-classifier trained on frozen OpenCLIP `ViT-B-32-quickgelu` embeddings. Training used balanced CIFAKE,
-SID-Set, and WildFake domains, with one clean view and one individually augmented view for each
-training image.
+Real or Fake tests whether an image looks AI-generated after changes such as JPEG compression, blur,
+resizing, noise, color jitter, and cropping. The detector is a scaled logistic-regression classifier
+trained on frozen OpenCLIP `ViT-B-32-quickgelu` embeddings. I trained it on balanced CIFAKE, SID-Set,
+and WildFake data, giving each training image one clean view and one individually transformed view.
 
 I built it for **TikTok TechJam 2026, Track 5: Robust Detection of AI-Generated Images Under
 Real-World Transformations**.
 
 ## Live Demo
 
-The deployed challenge is a ten-round game. In each round, the player and the detector classify the
-same labeled image, and the game compares both accuracy and response time. The React frontend runs
-on Cloudflare Pages, while a FastAPI service on Modal runs OpenCLIP inference on a T4 GPU.
+The demo is a ten-round game. In each round, the backend applies one visible, deterministic
+transformation and sends the same transformed pixels to both the player and the detector. It compares
+accuracy and response time. The React frontend runs on Cloudflare Pages, and a FastAPI service on
+Modal runs OpenCLIP inference on a T4 GPU.
 
-| Choose a side | Compare the calls |
+| Start the match | Classify the transformed image |
 | :---: | :---: |
-| [![Desktop ready screen for the Real or Fake human-versus-detector challenge](docs/assets/webapp-ready.png)](https://real-vs-ai.pages.dev) | [![Desktop result screen showing the human and detector calls, confidence, and timing](docs/assets/webapp-reveal.png)](https://real-vs-ai.pages.dev) |
+| [![Desktop ready screen for the Real or Fake human-versus-detector challenge](docs/assets/webapp-ready.png)](https://real-vs-ai.pages.dev) | [![Desktop challenge screen showing an augmented image and REAL or AI-generated controls](docs/assets/devpost/02-classify.png)](https://real-vs-ai.pages.dev) |
+
+| Compare the calls | Review the final score |
+| :---: | :---: |
+| [![Desktop result screen showing the human and detector calls, confidence, and timing](docs/assets/webapp-reveal.png)](https://real-vs-ai.pages.dev) | [![Desktop final scoreboard comparing human and detector accuracy and response time](docs/assets/devpost/04-final-score.png)](https://real-vs-ai.pages.dev) |
 
 ### Responsive View
 
-![Mobile ready screen for the Real or Fake challenge](docs/assets/webapp-mobile.png)
+| Ready | Classify | Final score |
+| :---: | :---: | :---: |
+| [![Mobile ready screen for the Real or Fake challenge](docs/assets/webapp-mobile.png)](https://real-vs-ai.pages.dev) | [![Mobile challenge screen showing an augmented image and classification controls](docs/assets/webapp-mobile-classify.png)](https://real-vs-ai.pages.dev) | [![Mobile final scoreboard comparing human and detector performance](docs/assets/webapp-mobile-final.png)](https://real-vs-ai.pages.dev) |
 
-I checked the live flow with Chrome DevTools on 1 September 2026 at desktop and mobile viewport
-sizes. Status, round creation, image delivery, and guess submission all returned HTTP 200, with no
-console warnings or errors.
+I checked the app with automated unit and integration tests and an end-to-end browser pass on desktop
+and mobile. That pass covered the production API, transformed image delivery, gameplay flow, and
+responsive layout, with no console errors. The deployed challenge pool has 800 balanced images: 400
+REAL and 400 FAKE from SID-Set and WildFake evaluation samples.
 
-The deployed Modal backend runs `ViT-B-32-quickgelu / semantic_native_mixed`, matching the promoted
-artifact in this repository. The hosted game can therefore be used as live evidence for the current
-model.
+The Modal backend runs `ViT-B-32-quickgelu / semantic_native_mixed`, the same model as the artifact
+in this repository. The hosted game is therefore using the model described below.
 
 ## Results
 
-The final `semantic_native_mixed` artifact passed all of the required checks. Training used 4,000
+I selected the `semantic_native_mixed` artifact after it passed the required checks. Training used 4,000
 REAL and 4,000 FAKE images from each of CIFAKE, SID-Set, and an allowed WildFake partition. Clean
 and deterministic augmented views produced 48,000 fitting rows. I calibrated the threshold only on
 a separate 1,000-image SID holdout. Robust AUC is the mean across 14 individually applied
@@ -73,9 +79,9 @@ and a higher median FAKE score than REAL score. The candidate passed every check
 `outputs/model.joblib`. Feature extraction, fitting, evaluation, and promotion took 547.063 seconds
 under a hard 3,600-second budget.
 
-Current artifact SHA-256:
-`0c1cf7d6dc1c7ec3b4e3885d5a76d0b1ed7b2908fce7bdb5be4991b9208449cf`. The complete gate records
-and per-stage timings are in [outputs/native_metrics.json](outputs/native_metrics.json) and
+Artifact SHA-256:
+`0c1cf7d6dc1c7ec3b4e3885d5a76d0b1ed7b2908fce7bdb5be4991b9208449cf`. The gate records and
+per-stage timings are in [outputs/native_metrics.json](outputs/native_metrics.json) and
 [outputs/native_training_timing.json](outputs/native_training_timing.json).
 
 ### Previous Iteration
@@ -90,6 +96,15 @@ distribution.
 | Semantic + FFT, clean training | **0.991760** | 0.910941 | 0.951351 |
 | Semantic + FFT, clean + augmented training | 0.988409 | **0.956211** | **0.972310** |
 
+![Clean and robust ROC AUC for the original three-model CIFAKE ablation](docs/report_figures/ablation.png)
+
+*On this ablation, adding augmented views improved robustness more than adding the FFT branch alone.*
+
+![ROC AUC for the original augmented hybrid under individual transformations](docs/report_figures/robustness_conditions.png)
+
+*The augmented hybrid held up best under JPEG compression and moderate transforms. Heavy blur and
+quarter-scale resizing were the first conditions below 0.90 AUC.*
+
 The full tables for the current model are in [outputs/robustness_table.csv](outputs/robustness_table.csv)
 and [outputs/ablation_table.csv](outputs/ablation_table.csv). The earlier three-model results remain
 available in [outputs/clean_metrics.json](outputs/clean_metrics.json) and the
@@ -97,16 +112,21 @@ available in [outputs/clean_metrics.json](outputs/clean_metrics.json) and the
 
 ### Cross-Domain Diagnostic
 
-Doing well after transformations did not guarantee that the model would generalize to new generators
-or image sources. The first hybrid model predicted every native image as fake and ranked close to
-chance. In response, I retrained with semantic features and native-resolution data, kept calibration
-separate, and added cross-domain checks before selecting the final model.
+Performance after transformations did not guarantee generalization to new generators or image
+sources. The first hybrid model predicted every native image as fake and ranked close to chance. I
+then retrained with semantic features and native-resolution data, kept calibration separate, and
+added cross-domain checks before choosing the model above.
 
 | Model iteration | SID validation AUC | WildFake COCO/DALL-E AUC | WildFake LAION/DALL-E AUC |
 | --- | ---: | ---: | ---: |
 | Original hybrid, augmented | 0.497500 | 0.502500 | 0.500000 |
 | Original semantic component | 0.886975 | 0.767975 | 0.740600 |
 | **Promoted semantic native mix** | **0.991900** | **0.902925** | **0.912700** |
+
+![Blind-transfer ROC AUC for the original semantic and hybrid variants](docs/report_figures/blind_transfer.png)
+
+*On these frozen diagnostic samples, the semantic branch retained ranking information; both FFT
+hybrids were close to chance.*
 
 The native gates use three balanced 400-image diagnostic sets; they are not the full organizer
 benchmark.
@@ -115,9 +135,14 @@ intervals, and failure analysis are in the
 [original-model summary](outputs/cross_domain_summary.json). Evidence for the current model is in
 [outputs/native_metrics.json](outputs/native_metrics.json).
 
+![Frequency-feature extrapolation from CIFAKE into three native-resolution datasets](docs/report_figures/frequency_extrapolation.png)
+
+*Native inputs produced standardized frequency values near 500, far outside the training-scale
+range. That shift saturated the original hybrid's linear head, so I removed the FFT branch.*
+
 ## Approach
 
-Each image produces a normalized 512-dimensional OpenCLIP vector. I fit a
+For each image, I extract a normalized 512-dimensional OpenCLIP vector and fit a
 `StandardScaler + LogisticRegression` pipeline while giving each class and domain equal weight. The
 same frozen backbone handles clean and transformed views. The final artifact does not use FFT
 features.
@@ -134,11 +159,16 @@ flowchart LR
 
 ### How the final model differs
 
-The bare frozen-CLIP linear probe provides an earlier comparison. For the final pipeline, I added
-balanced multi-domain fitting, deterministic family-balanced augmentation, disjoint threshold
-calibration, frozen-ID/hash exclusions, and cross-domain checks that prevent obvious prediction
-collapse. The results below show why the earlier frequency branch was useful for some CIFAKE tests
-but was not suitable for the final model.
+The bare frozen-CLIP linear probe is the starting point for comparison. I then added balanced
+multi-domain fitting, deterministic family-balanced augmentation, disjoint threshold calibration,
+frozen-ID/hash exclusions, and cross-domain checks. The checks showed that the frequency branch helped
+on some CIFAKE tests but did not transfer to native-resolution images, so I left it out of the model
+used for the demo.
+
+![Development path from semantic baseline through hybrid diagnosis and final promotion](docs/report_figures/project_progression.png)
+
+*The experiments moved from a CIFAKE baseline to augmentation, exposed the hybrid's native-resolution
+failure, and led to the semantic model used for the demo.*
 
 ## Setup
 
@@ -365,8 +395,8 @@ inference CLI, analysis, and documentation.
   with the original hybrid retained as comparison evidence.
 - [outputs/cross_domain_summary.json](outputs/cross_domain_summary.json): frozen-model blind
   diagnostics, component ablations, and remediation notes.
-- [outputs/devpost_description.md](outputs/devpost_description.md): original-model Devpost draft;
-  update it for the final semantic model before publication.
+- [outputs/devpost_description.md](outputs/devpost_description.md): publication-ready description of
+  the final semantic model and live Human vs Machine challenge.
 - [outputs/demo_script.md](outputs/demo_script.md): 2–4 minute demo shot list. Add the public YouTube
   URL to Devpost after recording.
 

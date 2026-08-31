@@ -7,6 +7,7 @@ from src.detector.model import (
     ARTIFACT_SCHEMA_VERSION,
     FINAL_MODEL_NAME,
     load_artifact,
+    predict_margins,
     predict_scores,
     save_artifact,
     score_models,
@@ -54,3 +55,15 @@ def test_artifact_round_trip(tmp_path: Path) -> None:
         loaded["models"][FINAL_MODEL_NAME], _arrays(), semantic_only=False
     )
     np.testing.assert_allclose(actual, expected)
+
+
+def test_decision_margins_preserve_ranking_after_probabilities_saturate() -> None:
+    model = train_models(_arrays(), _arrays(0.1), seed=7)[FINAL_MODEL_NAME]
+    classifier = model.named_steps["classifier"]
+    classifier.intercept_ += 1000.0
+
+    scores = predict_scores(model, _arrays(), semantic_only=False)
+    margins = predict_margins(model, _arrays(), semantic_only=False)
+
+    assert np.count_nonzero(scores == 1.0) == len(scores)
+    assert len(np.unique(margins)) == len(margins)

@@ -96,6 +96,15 @@ def predict_scores(
     return scores
 
 
+def predict_margins(
+    model: Pipeline, arrays: FeatureArrays, semantic_only: bool
+) -> np.ndarray:
+    margins = model.decision_function(combine_features(arrays, semantic_only))
+    if not np.isfinite(margins).all():
+        raise ValueError("Model produced non-finite decision margins")
+    return np.asarray(margins, dtype=np.float64)
+
+
 def calculate_metrics(
     labels: np.ndarray, scores: np.ndarray, threshold: float = 0.5
 ) -> BinaryMetrics:
