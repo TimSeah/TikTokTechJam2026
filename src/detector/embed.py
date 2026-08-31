@@ -48,6 +48,9 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--limit", type=int)
     parser.add_argument("--seed", type=int, default=2026)
     parser.add_argument("--semantic-only", action="store_true")
+    parser.add_argument("--dataset")
+    parser.add_argument("--dataset-revision")
+    parser.add_argument("--source-split")
     return parser.parse_args()
 
 
@@ -78,6 +81,12 @@ def main() -> None:
     }
     if args.semantic_only:
         metadata["feature_mode"] = "semantic"
+    if args.dataset:
+        metadata["dataset"] = args.dataset
+    if args.dataset_revision:
+        metadata["dataset_revision"] = args.dataset_revision
+    if args.source_split:
+        metadata["source_split"] = args.source_split
     metadata_path = args.output_dir / "metadata.json"
     if metadata_path.exists():
         existing = read_cache_metadata(args.output_dir)
