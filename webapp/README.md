@@ -115,3 +115,27 @@ The Modal frontend is not a separate process that can be stopped independently. 
 excludes frontend files from the Modal image, and the Modal root returns 404. Actual site visits
 still call `/api/status`, which starts the GPU backend when it has scaled to zero. After ten idle
 minutes, `min_containers=0` allows active Modal compute to return to zero.
+
+## GitHub CI/CD
+
+The workflows in `.github/workflows` validate matching pull requests and deploy matching changes
+after they reach `main`. Both workflows can also be run manually from the Actions tab.
+
+Add these encrypted repository secrets under **Settings > Secrets and variables > Actions**:
+
+| Secret | Value |
+| --- | --- |
+| `CLOUDFLARE_ACCOUNT_ID` | The Cloudflare account ID that owns the `human-vs-ai` Pages project. |
+| `CLOUDFLARE_API_TOKEN` | A Cloudflare API token scoped to that account with Workers/Pages edit access. |
+| `MODAL_TOKEN_ID` | The ID of a dedicated Modal API token. |
+| `MODAL_TOKEN_SECRET` | The secret for the same Modal API token. |
+
+Create the Cloudflare token from **Cloudflare Dashboard > Manage Account > API Tokens**. Create the
+Modal token from **Modal Dashboard > Settings > API Tokens**. Enter token values directly in GitHub;
+never add them to this repository or a local environment file.
+
+`cloudflare-pages.yml` runs frontend lint and build checks, deploys `webapp/frontend/dist` to the
+existing `human-vs-ai` Pages project, and verifies the production URL. `modal-backend.yml` runs the
+backend tests, uploads the tracked `outputs/model.joblib` to the existing Volume, recreates the
+Modal deployment, and verifies `/api/status`. Challenge images remain in the persistent Volume and
+are not uploaded by CI.
