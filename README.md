@@ -2,6 +2,7 @@
 
 **An image detector and a game where you compete against it.**
 
+[Watch the demo video](https://www.youtube.com/watch?v=Uav6HP3sy7I) ·
 [Play the live demo](https://real-vs-ai.pages.dev) ·
 [Read the report (PDF)](docs/technical_report.pdf) ·
 [Inspect the model card](outputs/model_card.md) ·
@@ -17,6 +18,13 @@ and WildFake data, giving each training image one clean view and one individuall
 
 I built it for **TikTok TechJam 2026, Track 5: Robust Detection of AI-Generated Images Under
 Real-World Transformations**.
+
+## Demo Video
+
+https://github.com/user-attachments/assets/0e9c3f95-611f-40de-b80b-9c6b63f31193
+
+Watch the [end-to-end project walkthrough](https://www.youtube.com/watch?v=Uav6HP3sy7I), including
+live directory-to-JSON inference, robustness results, failure analysis, and model trade-offs.
 
 ## Live Demo
 
