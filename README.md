@@ -23,8 +23,7 @@ Real-World Transformations**.
 
 https://github.com/user-attachments/assets/0e9c3f95-611f-40de-b80b-9c6b63f31193
 
-Watch the [end-to-end project walkthrough](https://www.youtube.com/watch?v=Uav6HP3sy7I), including
-live directory-to-JSON inference, robustness results, failure analysis, and model trade-offs.
+Watch the [end-to-end project demo](https://www.youtube.com/watch?v=Uav6HP3sy7I).
 
 ## Live Demo
 
